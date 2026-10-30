@@ -349,7 +349,7 @@ def _install_pip(tool: Tool) -> None:
 def _npm_cmd() -> str:
     npm = resolve("npm")
     if not npm:
-        raise ReachError(NEED_SETUP, "npm is not installed", hint="Run `agent-reach add <channel>` again.")
+        raise ReachError(NEED_SETUP, "npm is not installed", hint="Run `agent-reach-unleashed add <channel>` again.")
     return npm
 
 

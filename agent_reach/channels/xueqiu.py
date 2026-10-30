@@ -22,9 +22,9 @@ from agent_reach.runtime.run import http_request
 from .base import Action, Channel, Param
 
 _XQ_LOGIN_HINT = (
-    "Xueqiu community data needs a browser session. Run `agent-reach login xueqiu`, "
+    "Xueqiu community data needs a browser session. Run `agent-reach-unleashed login xueqiu`, "
     "let the user open xueqiu.com in the Agent Reach browser, then run "
-    "`agent-reach login xueqiu --sync`. The session expires within hours; repeat these steps when it does."
+    "`agent-reach-unleashed login xueqiu --sync`. The session expires within hours; repeat these steps when it does."
 )
 
 _UA = (
@@ -92,7 +92,7 @@ def _ensure_cookies(config=None) -> None:
     """Populate session cookies without touching browser credential stores.
 
     Priority order:
-    1. Saved cookie string in ~/.agent-reach/config.yaml  (set by `agent-reach login xueqiu --sync`)
+    1. Saved cookie string in ~/.agent-reach/config.yaml  (set by `agent-reach-unleashed login xueqiu --sync`)
     2. Homepage visit fallback (only yields public session cookies and may not
        be sufficient when Xueqiu requires a logged-in session)
     """
@@ -243,7 +243,7 @@ class XueqiuChannel(Channel):
         if not _import_from_browser():
             raise ReachError(
                 NEED_LOGIN, "no Xueqiu session found in the Agent Reach browser",
-                hint="Run `agent-reach login xueqiu`, let the user open xueqiu.com there, then `agent-reach login xueqiu --sync`.",
+                hint="Run `agent-reach-unleashed login xueqiu`, let the user open xueqiu.com there, then `agent-reach-unleashed login xueqiu --sync`.",
             )
         return {"synced": "xueqiu_cookie"}
 

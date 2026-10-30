@@ -1,6 +1,6 @@
 [project]
 name = "agent-reach"
-version = "1.6.0.4"
+version = "1.6.0.5"
 description = "Internet access for AI agents: one CLI with JSON output to search and read the web, YouTube, GitHub, V2EX and more."
 readme = "README.md"
 license = {text = "MIT"}
@@ -44,6 +44,7 @@ dev = [
 ]
 
 [project.scripts]
+agent-reach-unleashed = "agent_reach.cli:main"
 agent-reach = "agent_reach.cli:main"
 
 [project.urls]

@@ -75,7 +75,7 @@ def _source_cookies(channel: str, domains) -> tuple[list, str]:
             found.append((cookies, context))
     if len(found) > 1:
         raise ReachError(NEED_SETUP, "Several local browsers have cookies for this site; choose which account to reuse",
-                         hint="Run agent-reach browser profiles, then browser use ID. No account was copied.")
+                         hint="Run agent-reach-unleashed browser profiles, then browser use ID. No account was copied.")
     if found:
         return found[0]
     # Older Reach versions stored the user's login in a per-site owned snapshot.

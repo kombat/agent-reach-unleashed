@@ -318,7 +318,7 @@ def ensure_chrome(*, retry_cloak: bool = False) -> str:
         fallback = _system_chrome()
         if not fallback:
             raise ReachError(NEED_SETUP, "CloakBrowser could not be installed and no system Chrome was found",
-                             hint="Check the download/proxy connection, or install Chrome, then run agent-reach browser setup.") from None
+                             hint="Check the download/proxy connection, or install Chrome, then run agent-reach-unleashed browser setup.") from None
         update_state(backend="chrome", executable=fallback, launcher_python=None,
                      fallback_reason="CloakBrowser installation/download failed")
         return fallback
@@ -582,7 +582,7 @@ def ensure_running(context: Optional[str] = None) -> None:
             setup()
         else:
             raise ReachError(NEED_SETUP, "Enable the OpenCLI extension in the dedicated Chrome fallback",
-                             hint="Run agent-reach browser setup; no website login has been requested.")
+                             hint="Run agent-reach-unleashed browser setup; no website login has been requested.")
     touch()
 
 
@@ -873,11 +873,11 @@ def _setup_from_store() -> dict:
         if not found:
             raise ReachError(
                 NEED_SETUP, "waiting for the OpenCLI extension in the Agent Reach browser",
-                hint="Ask the user to click 'Add to Chrome' in the window that just opened, then run `agent-reach browser setup` again.",
+                hint="Ask the user to click 'Add to Chrome' in the window that just opened, then run `agent-reach-unleashed browser setup` again.",
             )
     if result["status"] != "ready":
         raise ReachError(NEED_SETUP, "waiting for the OpenCLI extension in the Agent Reach browser",
-                         hint="Run `agent-reach browser setup` again after the extension is added.")
+                         hint="Run `agent-reach-unleashed browser setup` again after the extension is added.")
     return status()
 
 
@@ -911,5 +911,5 @@ def setup_problems() -> List[str]:
     macOS/Linux set the browser up by themselves on first use, so nothing blocks there.
     """
     if not can_load_extension() and not bound_context():
-        return ["Agent Reach browser not set up: run `agent-reach browser setup`"]
+        return ["Agent Reach browser not set up: run `agent-reach-unleashed browser setup`"]
     return []

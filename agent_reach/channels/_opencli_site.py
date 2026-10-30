@@ -34,7 +34,7 @@ class OpenCLISiteChannel(Channel):
     def _opencli(self, args, timeout: float, *, empty_is_error: bool = True) -> list:
         """Run one OpenCLI command for this site and return unified items."""
         hint = (
-            f"Run `agent-reach login {self.name}` and ask the user to log in to {self.login_hint} "
+            f"Run `agent-reach-unleashed login {self.name}` and ask the user to log in to {self.login_hint} "
             "in the Agent Reach browser window it opens. Never log in for them."
         )
         try:

@@ -31,7 +31,7 @@ def launch_spec() -> tuple[list[str], str]:
     exe = tools.resolve("opencli")
     node = tools.resolve("node")
     if not exe or not node:
-        raise ReachError(NEED_SETUP, "Run agent-reach add CHANNEL to install Node and OpenCLI")
+        raise ReachError(NEED_SETUP, "Run agent-reach-unleashed add CHANNEL to install Node and OpenCLI")
     resolved = Path(exe).resolve()
     # npm on Windows uses a .cmd shim beside node_modules; POSIX uses a symlink.
     candidates = [*resolved.parents, Path(exe).parent / "node_modules" / "@jackwener" / "opencli"]

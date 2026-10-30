@@ -133,7 +133,7 @@ def browser_login_next(ch) -> str:
     needs_sync = bool(ch.session) or type(ch).sync_login is not Channel.sync_login
     if needs_sync:
         return (f"The user logs in to {ch.name} in the Agent Reach browser window that just opened; "
-                f"then run `agent-reach login {ch.name} --sync`.")
+                f"then run `agent-reach-unleashed login {ch.name} --sync`.")
     return f"The user logs in to {ch.name} in the Agent Reach browser window that just opened; then retry the action."
 
 # ── checks ──
@@ -216,8 +216,8 @@ def regressed(check: Optional[dict]) -> bool:
 
 def channel_status(ch, data: dict) -> dict:
     if not is_added(ch, data):
-        return {"status": "not_added", "problems": [], "hint": f"agent-reach add {ch.name}"}
-    problems = [f"{t} not installed: run `agent-reach add {ch.name}`" for t in channel_tools(ch) if not tools.present(t)]
+        return {"status": "not_added", "problems": [], "hint": f"agent-reach-unleashed add {ch.name}"}
+    problems = [f"{t} not installed: run `agent-reach-unleashed add {ch.name}`" for t in channel_tools(ch) if not tools.present(t)]
     problems += ch.setup_problems()
     if problems:
         return {"status": "needs_setup", "problems": problems}
@@ -230,7 +230,7 @@ def channel_status(ch, data: dict) -> dict:
             codes = check.get("codes", {})
             if all(codes.get(a) == "NEED_LOGIN" for a in failed):
                 return {"status": "needs_login", "problems": [f"needs login for: {', '.join(failed)}"],
-                        "hint": f"agent-reach login {ch.name}", "checked_at": check["at"]}
+                        "hint": f"agent-reach-unleashed login {ch.name}", "checked_at": check["at"]}
             if all(codes.get(a) == "RATE_LIMITED" for a in failed):
                 return {"status": "cooldown", "problems": [f"rate limited: {', '.join(failed)}"],
                         "checked_at": check["at"]}
@@ -240,7 +240,7 @@ def channel_status(ch, data: dict) -> dict:
             return {"status": "broken", "problems": [f"live check failed: {', '.join(failed)}"], "checked_at": check["at"]}
         return {"status": "search_ready" if check.get("scope") == "search" else "ready", "problems": [],
                 "checked_at": check["at"], "verified_actions": list(actions)}
-    return {"status": "unverified", "problems": [], "hint": f"agent-reach check {ch.name}"}
+    return {"status": "unverified", "problems": [], "hint": f"agent-reach-unleashed check {ch.name}"}
 
 
 def doctor() -> dict:
@@ -281,7 +281,7 @@ def _next_step(ch) -> Optional[str]:
     """Tools are prepared; actual access decides whether login is needed."""
     if ch.login_url or ch.login_argv:
         return ("Use existing public tools when they cover the task. "
-                f"If access requires login, run agent-reach login {ch.name} "
+                f"If access requires login, run agent-reach-unleashed login {ch.name} "
                 "to open the shared dedicated browser or native login flow.")
     return " ".join(_sentence(p) for p in ch.setup_problems()) or None
 
@@ -428,7 +428,7 @@ def render_skill(lang: Optional[str] = None) -> str:
     labels = {"default": "default", "optional": "optional", "experimental": "experimental"}
     rows = ["| channel | level | actions | login |", "|---|---|---|---|"]
     for ch in _channels():
-        login = f"`agent-reach login {ch.name}`" if _has_login(ch) else "-"
+        login = f"`agent-reach-unleashed login {ch.name}`" if _has_login(ch) else "-"
         if ch.name == "reddit":
             login = "浏览器路径按需" if lang == "zh" else "Browser path only, if required"
         rows.append(f"| {ch.name} | {labels[ch.level]} | {', '.join(a.name for a in ch.actions)} | {login} |")
@@ -599,7 +599,7 @@ def link_skill(skills_dir: str) -> dict:
         target_dir = Path.cwd() / target_dir
     if target_dir.name == SKILL_NAME:
         raise ReachError(BAD_INPUT, f"give the skills folder, not the {SKILL_NAME} folder inside it",
-                         hint=f"agent-reach skill link {target_dir.parent}")
+                         hint=f"agent-reach-unleashed skill link {target_dir.parent}")
     if os.path.realpath(target_dir) == os.path.realpath(skill_dir().parent):
         return skill_status()
     text = render_skill()
@@ -690,7 +690,7 @@ def _old_copy_actions(old: dict) -> List[str]:
 def _optional_entry(c) -> dict:
     """What the user must do for an optional channel; installs happen by themselves."""
     needs = (["login_if_required"] if (c.login_url or c.login_argv) else []) + ([c.needs_key] if c.needs_key else [])
-    return {"channel": c.name, "level": c.level, "add": f"agent-reach add {c.name}", "needs": needs}
+    return {"channel": c.name, "level": c.level, "add": f"agent-reach-unleashed add {c.name}", "needs": needs}
 
 
 def setup() -> dict:
@@ -729,7 +729,7 @@ def setup() -> dict:
         "transcribers": transcribers,
         "skill": skill,
         "optional_channels": optional,
-        "logins": [{"channel": c.name, "command": f"agent-reach login {c.name}",
+        "logins": [{"channel": c.name, "command": f"agent-reach-unleashed login {c.name}",
                     "when": "only_if_required"} for c in defaults if _has_login(c)],
         "capability_summary": capability_summary(registered, current),
         "migration": migration,
@@ -862,7 +862,7 @@ def sync() -> dict:
         previous = check.get("previous") or {}
         expired = [a for a, code in (check.get("codes") or {}).items() if code == "NEED_LOGIN" and previous.get(a)]
         if expired:
-            actions.append(f"The user needs to log in to {c.name} again: run `agent-reach login {c.name}`.")
+            actions.append(f"The user needs to log in to {c.name} again: run `agent-reach-unleashed login {c.name}`.")
     transcribers = _install_transcribers(upgrade=True)
     actions += [_sentence(f"Local transcription could not install {t['tool']}: {t['error']['hint'] or t['error']['message']}")
                 for t in transcribers if not t["ok"]]

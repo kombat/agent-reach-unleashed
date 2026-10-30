@@ -6,7 +6,7 @@ Read when the user asks what can be fetched or how complete a result is. Declare
 ## 三层说明
 
 - **公开可尝试**：Agent 已有网页工具、原生工具或公开接口可能已满足任务；不要求安装浏览器、登录。按实际取得的证据回答。
-- **Reach 补充**：当前发布版声明的动作，见 `agent-reach channels`。需要配置时先复用专用浏览器已保存的会话，所选路径实际要求登录时才本人登录。
+- **Reach 补充**：当前发布版声明的动作，见 `agent-reach-unleashed channels`。需要配置时先复用专用浏览器已保存的会话，所选路径实际要求登录时才本人登录。
 - **本机已验证**：只列本机最近成功验收的具体动作；安装、保存会话和网络可达均不等于业务验收。
 
 ## 本版渠道
@@ -26,6 +26,6 @@ Read when the user asks what can be fetched or how complete a result is. Declare
 | V2EX | 主题、正文及公开回复 | hot/node/read/user；返回范围以本次响应为准，不保证隐藏或缺失回复 |
 | 雪球 | 部分公开行情和索引信息 | quote/search/hot_posts/hot_stocks；行情与社区路径分别验收 |
 | Web | Agent 自带搜索/读取 | Reach web search/read 为匿名保底；摘要、页面壳和验证页不能当完整正文 |
-| 小宇宙 | 节目页标题、简介 | transcribe 整集转文字；需要用户提供 Groq Key（`agent-reach configure groq-key`） |
+| 小宇宙 | 节目页标题、简介 | transcribe 整集转文字；需要用户提供 Groq Key（`agent-reach-unleashed configure groq-key`） |
 
 登录后的能力表述使用“可启用/尝试上述浏览器动作”，不使用“登录后支持全部评论”。用户跳过登录时交付已有公开证据。

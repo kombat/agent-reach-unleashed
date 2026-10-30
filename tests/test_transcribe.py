@@ -908,7 +908,7 @@ class TestLocalWhisper:
     def test_local_without_a_whisper_installed_says_how_to_install(self, monkeypatch, chunk_file):
         monkeypatch.setattr(tr, "local_whisper", lambda: None)
 
-        with pytest.raises(tr.NoProviderConfigured, match="agent-reach update"):
+        with pytest.raises(tr.NoProviderConfigured, match="agent-reach-unleashed update"):
             tr.transcribe_chunk(chunk_file, tr.LOCAL)
 
     def test_whisper_that_writes_nothing_is_an_error(self, monkeypatch, chunk_file):

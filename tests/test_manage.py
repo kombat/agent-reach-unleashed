@@ -240,14 +240,14 @@ def test_npm_tool_gets_private_node_first(env):
     out = manage.add("linky")
     assert env["installs"] == ["node", "mcporter"]
     assert {t: e["version"] for t, e in state.load()["tools"].items()} == {"node": "1.2.3", "mcporter": "1.2.3"}
-    assert "agent-reach login linky" in out["next"]
+    assert "agent-reach-unleashed login linky" in out["next"]
 
 
 def test_browser_channel_add_never_opens_login_and_explicit_dedicated_remove_cleans_up(env):
     out = manage.add("site")
     assert "ensure_chrome" in env["calls"]
     assert env["calls"] == ["ensure_chrome", "setup"]
-    assert "If access requires login" in out["next"] and "agent-reach login site" in out["next"]
+    assert "If access requires login" in out["next"] and "agent-reach-unleashed login site" in out["next"]
     assert out["capability_summary"]["channels"][0]["reach_status"] == "unverified"
     manage.add("site2")
     browser.profile_dir().mkdir(parents=True)
@@ -556,7 +556,7 @@ def test_setup_adds_default_channels_and_survives_a_failing_install(env, monkeyp
     assert by_name["web"]["ok"] is True
     assert by_name["broken"]["ok"] is False and by_name["broken"]["error"]["code"] == "UPSTREAM_BROKEN"
     assert "prerequisites" not in result, "prerequisites are installed, not reported"
-    assert result["logins"] == [{"channel": "broken", "command": "agent-reach login broken",
+    assert result["logins"] == [{"channel": "broken", "command": "agent-reach-unleashed login broken",
                                   "when": "only_if_required"}]
     optional = {c["channel"]: c["needs"] for c in result["optional_channels"]}
     assert set(optional) == {"bili", "bili2", "needy", "site", "site2", "linky"}
@@ -963,7 +963,7 @@ def test_setup_summary_is_english_by_default_and_mentions_local_whisper(env, mon
     assert "Agent Reach Unleashed" in md and "needs one more step" in md
     assert "| Platform | Without a login | After logging in |" in md
     assert "install failed: UPSTREAM_BROKEN" in md
-    assert "did not install; `agent-reach update` tries again" in md
+    assert "did not install; `agent-reach-unleashed update` tries again" in md
     assert not any("\u4e00" <= ch <= "\u9fff" for ch in md), "no Chinese in the English summary"
 
 
@@ -1009,3 +1009,29 @@ def test_uninstall_leaves_no_empty_agent_reach_folders(env):
     manage.uninstall()
 
     assert not state.root().exists()
+
+
+# --- the command is agent-reach-unleashed; agent-reach stays as an alias ---
+
+_OLD_COMMAND = re.compile(r"(?<![\w./-])agent-reach (?!entry\b|config\b)")
+
+
+def test_both_command_names_run_the_same_program():
+    project = (Path(__file__).parents[1] / "pyproject.toml").read_text(encoding="utf-8")
+    scripts = project.split("[project.scripts]", 1)[1].split("\n[", 1)[0]
+    assert 'agent-reach-unleashed = "agent_reach.cli:main"' in scripts
+    assert 'agent-reach = "agent_reach.cli:main"' in scripts
+
+
+@pytest.mark.parametrize("lang", ["en", "zh"])
+def test_skill_tells_ais_to_use_the_new_command_name(lang):
+    text = manage.render_skill(lang)
+    assert "agent-reach-unleashed channels" in text
+    assert not _OLD_COMMAND.search(text), _OLD_COMMAND.search(text)
+
+
+@pytest.mark.parametrize("doc", ["docs/install.md", "docs/update.md", "docs/troubleshooting.md", "llms.txt",
+                                 "agent_reach/skill/references/maintenance.md", "agent_reach/skill/references/sessions.md"])
+def test_install_and_help_docs_use_the_new_command_name(doc):
+    text = (Path(__file__).parents[1] / doc).read_text(encoding="utf-8")
+    assert not _OLD_COMMAND.search(text), _OLD_COMMAND.search(text)

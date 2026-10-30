@@ -171,7 +171,7 @@ def test_failures_still_print_an_envelope_and_exit_one(capsys, fake_cli):
     assert code == 1
     assert set(out) == ENVELOPE_KEYS
     assert out["error"]["code"] == "BAD_INPUT"
-    assert "usage: agent-reach fake search <query>" in out["error"]["message"]
+    assert "usage: agent-reach-unleashed fake search <query>" in out["error"]["message"]
 
 
 def test_read_routes_by_url(capsys, fake_cli):
@@ -187,14 +187,14 @@ def test_unknown_command_is_bad_input(capsys, fake_cli):
         assert code == 1
         assert out["ok"] is False
         assert out["error"]["code"] == "BAD_INPUT"
-        assert "agent-reach help" in out["error"]["message"]
+        assert "agent-reach-unleashed help" in out["error"]["message"]
 
 
 def test_channels_lists_usage_for_agents(capsys, fake_cli):
     code, out = _run(capsys, ["channels"])
     assert code == 0
     action = out["channels"][0]["actions"][0]
-    assert action["usage"] == "agent-reach fake search <query> [--limit LIMIT]"
+    assert action["usage"] == "agent-reach-unleashed fake search <query> [--limit LIMIT]"
     assert action["backends"] == ["first", "second"]
 
 
@@ -341,7 +341,7 @@ def test_channels_reports_login_status(capsys, session_cli):
 
     _, out = _run(capsys, ["channels"])
     sess = next(c for c in out["channels"] if c["name"] == "sess")
-    assert sess["login"] == {"via": "session", "logged_in": False, "command": "agent-reach login sess"}
+    assert sess["login"] == {"via": "session", "logged_in": False, "command": "agent-reach-unleashed login sess"}
     assert next(c for c in out["channels"] if c["name"] == "fake")["login"] is None
     (session_dir("fake-tool") / "cookie").write_text("1")
     _, out = _run(capsys, ["channels"])
@@ -640,7 +640,7 @@ def test_query_uses_an_open_login_window_without_closing_it(fake_browser):
     browser.setup()
     browser.update_state(headless=False)  # the user is logging in in a visible window
     browser.ensure_running()
-    browser.setup()  # e.g. `agent-reach add` while the window is open
+    browser.setup()  # e.g. `agent-reach-unleashed add` while the window is open
     assert browser._load_state()["headless"] is False
     assert fake_browser["running"] and fake_browser["launches"] == 1
 

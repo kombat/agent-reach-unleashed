@@ -7,6 +7,11 @@ All notable changes to this project will be documented in this file.
 ---
 
 
+## [1.6.0.5] - 2026-10-30 (Agent Reach Unleashed)
+
+- The command is now `agent-reach-unleashed`, used everywhere people and AIs see it: the README, install and help docs, the skill, help text, hints and messages. `agent-reach` still works as an alias for the same program, so existing scripts and sessions keep working. The package name, and so `uv tool uninstall agent-reach`, is unchanged.
+- test.sh and the CI package check run the new command and the alias.
+
 ## [1.6.0.4] - 2026-10-30 (Agent Reach Unleashed)
 
 - The summary `setup` prints is in English unless the system language is Chinese, and says whether local transcription installed. The Chinese summary is unchanged apart from the Instagram and YouTube lines, which now describe reading, transcribing and watching. The skill, the summary, setup messages and channel descriptions all use one language rule.

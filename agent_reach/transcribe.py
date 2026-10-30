@@ -65,10 +65,10 @@ LOCAL_WHISPERS = {
     "whisper-ctranslate2": ["--model", "turbo", "--output_format", "txt"],
     "whisper": ["--model", "turbo", "--output_format", "txt"],
 }
-LOCAL_INSTALL_HINT = "run `agent-reach update` to install the local Whisper that setup normally installs"
+LOCAL_INSTALL_HINT = "run `agent-reach-unleashed update` to install the local Whisper that setup normally installs"
 NO_WHISPER_HINT = (
     f"To transcribe on this machine, {LOCAL_INSTALL_HINT}. Or ask the user for a free key from "
-    "https://console.groq.com, then run `agent-reach configure groq-key`."
+    "https://console.groq.com, then run `agent-reach-unleashed configure groq-key`."
 )
 LOCAL_CHUNK_TIMEOUT_SECONDS = 1800
 
@@ -92,7 +92,7 @@ _BLOCKED_HOSTS = {
 
 
 def _bin(binary: str) -> str:
-    """Our private copy (e.g. the ffmpeg `agent-reach add` installs) first, then PATH."""
+    """Our private copy (e.g. the ffmpeg `agent-reach-unleashed add` installs) first, then PATH."""
     from agent_reach.runtime.tools import resolve
 
     return resolve(binary) or binary
@@ -102,7 +102,7 @@ def _require(binary: str) -> None:
     from agent_reach.runtime.tools import resolve
 
     if not resolve(binary):
-        raise MissingDependency(f"{binary} not found (run `agent-reach add youtube`)")
+        raise MissingDependency(f"{binary} not found (run `agent-reach-unleashed add youtube`)")
 
 
 def _require_size_at_most(path: Path, limit: int, label: str) -> int:
@@ -427,7 +427,7 @@ def transcribe_chunk(
     if not key:
         raise NoProviderConfigured(
             f"{provider}: missing {PROVIDERS[provider]['key_field']} "
-            f"(configure with `agent-reach configure {provider}-key ...`)"
+            f"(configure with `agent-reach-unleashed configure {provider}-key ...`)"
         )
 
     info = PROVIDERS[provider]

@@ -49,10 +49,11 @@ python -m pip install --quiet --upgrade pip
 python -m pip install --quiet -c "$REPO_ROOT/constraints.txt" -e "$REPO_ROOT[dev]"
 
 echo "[3/4] Running read-only CLI commands"
-agent-reach version
-agent-reach channels > "$TEST_DIR/channels.json"
+agent-reach-unleashed version
+agent-reach version > /dev/null && echo "alias agent-reach OK"
+agent-reach-unleashed channels > "$TEST_DIR/channels.json"
 python -c 'import json,sys; d=json.load(open(sys.argv[1], encoding="utf-8")); assert d["ok"] and d["channels"], d; print("channels OK:", len(d["channels"]))' "$TEST_DIR/channels.json"
-agent-reach doctor > "$TEST_DIR/doctor.json"
+agent-reach-unleashed doctor > "$TEST_DIR/doctor.json"
 python -c 'import json,sys; d=json.load(open(sys.argv[1], encoding="utf-8")); assert "ok" in d, d; print("doctor OK")' "$TEST_DIR/doctor.json"
 
 echo "[4/4] Running repository tests"

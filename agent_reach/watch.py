@@ -2,7 +2,7 @@
 """Watch a video: sample still frames into contact sheets and capture its speech.
 
 Work happens in a folder of its own per run under ~/.agent-reach/watch/, which
-`agent-reach uninstall` removes. The downloaded video and single frames are
+`agent-reach-unleashed uninstall` removes. The downloaded video and single frames are
 deleted as soon as a run ends, even on failure; if the process exits first
 (timeout, Ctrl-C) the whole run folder goes. Only contact sheets outlive a run,
 for the agent to open, and the next run deletes anything untouched for an hour.

@@ -7,14 +7,14 @@
 ## Install
 
 - [Installation Guide](https://github.com/kombat/agent-reach-unleashed/blob/main/docs/install.md): agent-executable steps
-- Install from GitHub only, with uv: `uv tool install git+https://github.com/kombat/agent-reach-unleashed`, then `agent-reach setup`. The PyPI package named `agent-reach` is NOT this project.
-- `setup` turns on the default channels and places one copy of the skill at `~/.agents/skills/agent-reach-unleashed/SKILL.md`, linked into the skill folders of other AIs found on the machine; `agent-reach skill link <skills-dir>` adds another AI.
+- Install from GitHub only, with uv: `uv tool install git+https://github.com/kombat/agent-reach-unleashed`, then `agent-reach-unleashed setup`. The PyPI package named `agent-reach` is NOT this project.
+- `setup` turns on the default channels and places one copy of the skill at `~/.agents/skills/agent-reach-unleashed/SKILL.md`, linked into the skill folders of other AIs found on the machine; `agent-reach-unleashed skill link <skills-dir>` adds another AI.
 
 ## Commands
 
-- `agent-reach channels`: channels, actions, params (live source of truth)
-- `agent-reach <channel> <action> [args]`: e.g. `agent-reach bilibili search python`
-- `agent-reach read <url>`: read a link with the matching channel
+- `agent-reach-unleashed channels`: channels, actions, params (live source of truth)
+- `agent-reach-unleashed <channel> <action> [args]`: e.g. `agent-reach-unleashed bilibili search python`
+- `agent-reach-unleashed read <url>`: read a link with the matching channel
 - Output: `{schema_version, ok, channel, action, backend, items, meta, error}`; error codes NEED_SETUP, NEED_LOGIN, UPSTREAM_BROKEN, TIMEOUT, RATE_LIMITED, NOT_FOUND, BAD_INPUT
 - Management: `setup`, `add|remove <channel>`, `login|logout <channel>` (the user logs in), `browser setup|status`, `doctor`, `check`, `skill`, `skill link <dir>`, `update`, `configure`, `uninstall`
 - `add` installs everything a channel needs (Node.js, OpenCLI, CloakBrowser/Chrome, ffmpeg, browser extension; no admin password); the user only logs in or enters a key. `remove` also clears its login and private tools; default channels can be removed and stay removed across updates.

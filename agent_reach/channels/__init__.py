@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 """
-Channel registry — every platform exposed by `agent-reach <channel> <action>`.
+Channel registry: every platform exposed by `agent-reach-unleashed <channel> <action>`.
 """
 
 from typing import List, Optional

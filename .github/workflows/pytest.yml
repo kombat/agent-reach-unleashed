@@ -120,8 +120,9 @@ jobs:
         run: |
           python -m venv /tmp/smoke
           /tmp/smoke/bin/pip install --quiet dist/*.whl
+          /tmp/smoke/bin/agent-reach-unleashed version
           /tmp/smoke/bin/agent-reach version
-          cd /tmp && /tmp/smoke/bin/agent-reach channels | /tmp/smoke/bin/python -c "import json, sys; d = json.load(sys.stdin); assert d['ok'] and d['channels'], d; print(f\"channels OK: {len(d['channels'])}\")"
+          cd /tmp && /tmp/smoke/bin/agent-reach-unleashed channels | /tmp/smoke/bin/python -c "import json, sys; d = json.load(sys.stdin); assert d['ok'] and d['channels'], d; print(f\"channels OK: {len(d['channels'])}\")"
           cd /tmp && /tmp/smoke/bin/python -c "import agent_reach; from importlib.resources import files; assert (files('agent_reach')/'skill'/'SKILL.md').is_file(); print('SKILL.md ships in site-packages OK')"
 
   # Most users are on 1.5 (installed with pipx). Rehearse the documented

@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-"""Console entry point for `agent-reach`; all commands live in agent_reach.runtime.cli."""
+"""Console entry point for `agent-reach-unleashed` (alias `agent-reach`); all commands live in agent_reach.runtime.cli."""
 
 import os
 import sys

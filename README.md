@@ -12,8 +12,9 @@ Agent Reach already ships the right tools (yt-dlp, ffmpeg, Whisper support) but 
 | See what is on screen | Text only | `watch` (YouTube and Instagram) saves still frames as contact-sheet images an AI can open, plus the transcript |
 | Transcribe without a paid key | Needs a Groq or OpenAI key | `setup` installs a **local Whisper** on Windows, macOS and Linux and uses it when no key is set; audio never leaves the machine |
 | YouTube subtitles | Asks for Chinese first, which YouTube refuses for English videos (one failed language fails the whole request, then the channel pauses for an hour) | English by default; any language with `--lang` |
-| `agent-reach update` | Reinstalls the official release, which would wipe these changes | Updates from this fork's releases |
+| `agent-reach-unleashed update` | Reinstalls the official release, which would wipe these changes | Updates from this fork's releases |
 | Skill for AI agents | `agent-reach`, placed in Chinese unless the system language is English, and its description does not mention videos | `agent-reach-unleashed`, in English unless the system language is Chinese, and it says it watches videos and reels |
+| Command | `agent-reach` | `agent-reach-unleashed` (`agent-reach` still works as an alias) |
 | Setup summary and channel list | Chinese only | English unless the system language is Chinese; the summary says whether local transcription installed |
 | `./test.sh` (clean-install test) | Fails on a Python syntax error and is not run in CI | Fixed, and run in CI as its own job |
 
@@ -21,7 +22,7 @@ Agent Reach already ships the right tools (yt-dlp, ffmpeg, Whisper support) but 
 
 ```bash
 uv tool install git+https://github.com/kombat/agent-reach-unleashed
-agent-reach setup
+agent-reach-unleashed setup
 ```
 
 This works the same on Windows, macOS and Linux. `setup` also installs free local transcription, privately inside `~/.agent-reach`, so there is no extra step:
@@ -32,23 +33,23 @@ This works the same on Windows, macOS and Linux. `setup` also installs free loca
 | Apple Silicon Macs, as well | [mlx-whisper](https://github.com/ml-explore/mlx-examples/tree/main/whisper): uses the Mac's graphics chip, and is used instead of faster-whisper there | about 1.3 GB |
 | On the first transcription | The Whisper speech model (large-v3-turbo) for the engine in use, kept in `~/.agent-reach/models` | about 1.5 GB |
 
-As a guide, transcribing a 1 min 40 s reel (including fetching it) took 13 seconds with mlx-whisper and 39 seconds with faster-whisper on the processor of an M4 Mac. Older or Windows laptops without an NVIDIA card will be slower. If a Whisper install fails, setup says so and every channel still works; `agent-reach update` tries again. If a Groq or OpenAI key is configured, it is used first, exactly as in Agent Reach. `agent-reach uninstall` removes the Whisper engines and the model. All are open source under MIT, BSD or Apache-2.0 licences.
+As a guide, transcribing a 1 min 40 s reel (including fetching it) took 13 seconds with mlx-whisper and 39 seconds with faster-whisper on the processor of an M4 Mac. Older or Windows laptops without an NVIDIA card will be slower. If a Whisper install fails, setup says so and every channel still works; `agent-reach-unleashed update` tries again. If a Groq or OpenAI key is configured, it is used first, exactly as in Agent Reach. `agent-reach-unleashed uninstall` removes the Whisper engines and the model. All are open source under MIT, BSD or Apache-2.0 licences.
 
 **Windows: untested on a real PC.** Everything here has only been run on a Mac. On Windows, the full test suite and the install and upgrade checks pass in CI, but those simulate the Whisper downloads, so nobody has yet installed and transcribed on an actual Windows PC. If you try it there, please [open an issue](https://github.com/kombat/agent-reach-unleashed/issues) with what happened, or send a fix; contributions are very welcome.
 
 ## Use
 
 ```bash
-agent-reach read https://www.instagram.com/reel/<id>/                 # caption, author, date, likes
-agent-reach instagram transcribe https://www.instagram.com/reel/<id>/ # the spoken words
-agent-reach instagram watch https://www.instagram.com/reel/<id>/      # spoken words + frames every 5 s
-agent-reach youtube watch https://www.youtube.com/watch?v=<id>        # subtitles (or Whisper) + frames every 10 s
-agent-reach youtube subtitle <url> --lang zh                           # another language
+agent-reach-unleashed read https://www.instagram.com/reel/<id>/                 # caption, author, date, likes
+agent-reach-unleashed instagram transcribe https://www.instagram.com/reel/<id>/ # the spoken words
+agent-reach-unleashed instagram watch https://www.instagram.com/reel/<id>/      # spoken words + frames every 5 s
+agent-reach-unleashed youtube watch https://www.youtube.com/watch?v=<id>        # subtitles (or Whisper) + frames every 10 s
+agent-reach-unleashed youtube subtitle <url> --lang zh                           # another language
 ```
 
 `watch` returns the transcript in `text`, and in `raw.sheets` the paths of contact sheets (4 x 3 frames each, read left to right, top to bottom). Long videos are spread over at most 48 frames.
 
-**No video is kept.** Each run works in a folder of its own under `~/.agent-reach/watch/`. The video, any partial download and the single frames are deleted as soon as the run ends, even if it fails part way; if the program itself is stopped (a timeout or Ctrl-C), the whole run folder is deleted as it exits. Only the contact sheets stay, so the AI can open them, and the next run deletes anything untouched for an hour, including leftovers from a run that was killed outright. `agent-reach uninstall` removes the folder. `transcribe` downloads audio only and deletes it the same way.
+**No video is kept.** Each run works in a folder of its own under `~/.agent-reach/watch/`. The video, any partial download and the single frames are deleted as soon as the run ends, even if it fails part way; if the program itself is stopped (a timeout or Ctrl-C), the whole run folder is deleted as it exits. Only the contact sheets stay, so the AI can open them, and the next run deletes anything untouched for an hour, including leftovers from a run that was killed outright. `agent-reach-unleashed uninstall` removes the folder. `transcribe` downloads audio only and deletes it the same way.
 
 ## Responsible use
 

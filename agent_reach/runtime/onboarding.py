@@ -172,7 +172,7 @@ def _transcriber_lines_en(result):
         return ['Local transcription is ready (' + ', '.join(t['tool'] for t in rows) + '); '
                 'its speech model (about 1.5 GB) downloads on the first transcription if it is not there yet.', '']
     names = ', '.join(t['tool'] for t in failed)
-    return [f'Local transcription: {names} did not install; `agent-reach update` tries again. '
+    return [f'Local transcription: {names} did not install; `agent-reach-unleashed update` tries again. '
             'Everything else works.', '']
 
 

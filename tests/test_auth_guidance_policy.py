@@ -77,15 +77,11 @@ def test_public_guidance_never_installs_the_unrelated_pypi_package():
 
 def test_public_guidance_never_puts_secrets_in_process_arguments():
     """Operational docs should use hidden prompts or stdin for credentials."""
-    forbidden = (
-        'agent-reach configure twitter-cookies "',
-        "agent-reach configure twitter-cookies '",
-        'agent-reach configure xhs-cookies "',
-        "agent-reach configure xhs-cookies '",
-        "agent-reach configure groq-key gsk_",
-        "agent-reach configure openai-key sk-",
-        "agent-reach configure github-token gh",
-        "agent-reach configure proxy http",
+    forbidden = tuple(
+        command + rest
+        for command in ("agent-reach configure", "agent-reach-unleashed configure")
+        for rest in (' twitter-cookies "', " twitter-cookies '", ' xhs-cookies "', " xhs-cookies '",
+                     " groq-key gsk_", " openai-key sk-", " github-token gh", " proxy http")
     )
     violations = []
     for path in _policy_documents():

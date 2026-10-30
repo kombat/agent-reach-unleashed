@@ -25,7 +25,7 @@ class XiaoyuzhouChannel(Channel):
     def setup_problems(self):
         if os.environ.get("GROQ_API_KEY") or Config(read_only=True).get("groq_api_key"):
             return []
-        return ["no Groq API key: get one free at https://console.groq.com, then `agent-reach configure groq-key`"]
+        return ["no Groq API key: get one free at https://console.groq.com, then `agent-reach-unleashed configure groq-key`"]
 
     actions = (
         Action(
@@ -53,13 +53,13 @@ class XiaoyuzhouChannel(Channel):
         if not key:
             raise ReachError(
                 NEED_SETUP, "no Groq API key configured",
-                hint="Ask the user for a free key from https://console.groq.com, then run `agent-reach configure groq-key`.",
+                hint="Ask the user for a free key from https://console.groq.com, then run `agent-reach-unleashed configure groq-key`.",
             )
         from agent_reach.runtime.tools import ffmpeg_path
 
         ffmpeg = ffmpeg_path()
         if not ffmpeg:
-            raise ReachError(NEED_SETUP, "ffmpeg is not installed", hint="Run `agent-reach add xiaoyuzhou`.")
+            raise ReachError(NEED_SETUP, "ffmpeg is not installed", hint="Run `agent-reach-unleashed add xiaoyuzhou`.")
         # our private ffmpeg goes first on the script's PATH
         path = os.pathsep.join([os.path.dirname(ffmpeg), os.environ.get("PATH", "")])
         with private_temporary_directory(prefix="agent-reach-xyz-") as tmp:

@@ -41,28 +41,28 @@ _MANAGEMENT = (
     "setup", "add", "remove", "update", "doctor", "uninstall", "configure", "version",
 )
 
-HELP = """agent-reach — internet access for AI agents (all output is JSON)
+HELP = """agent-reach-unleashed - internet access for AI agents (all output is JSON)
 
 For agents:
-  agent-reach channels                    list channels, actions, params
-  agent-reach <channel> <action> [args]   e.g. agent-reach bilibili search python
-  agent-reach read <url>                  read a link with the matching channel
+  agent-reach-unleashed channels                    list channels, actions, params
+  agent-reach-unleashed <channel> <action> [args]   e.g. agent-reach-unleashed bilibili search python
+  agent-reach-unleashed read <url>                  read a link with the matching channel
   Search/read try declared public web routes first; --backend selects a site tool
   --backend public-web                  public access only; no browser fallback
 
 For the user:
-  agent-reach setup [--text]              install defaults and skill; --text displays the capability tables
-  agent-reach add <channel>               install channel dependencies and prepare its browser
-  agent-reach remove <channel>            remove a channel (defaults too) and what only it used
-  agent-reach login|logout <channel>      log in (the user does it) / forget the login
-  agent-reach browser setup|status|stop   headless shared browser; login opens a window
-  agent-reach browser profiles|use ID    choose an existing local login source
-  agent-reach skill [link <skills-dir>]   where the agent skill is; link it for another AI
-  agent-reach doctor [--text]             status of every channel and installed tool versions (no network)
-  agent-reach check [channel] [--text]    live-test channels; --search tests search/jobs only
-  agent-reach update [--check]            upgrade Agent Reach, every added channel's tools and the skill
-  agent-reach configure <key> [value]     groq-key | openai-key | proxy | github-token
-  agent-reach uninstall [--dry-run]       remove everything Agent Reach installed
+  agent-reach-unleashed setup [--text]              install defaults and skill; --text displays the capability tables
+  agent-reach-unleashed add <channel>               install channel dependencies and prepare its browser
+  agent-reach-unleashed remove <channel>            remove a channel (defaults too) and what only it used
+  agent-reach-unleashed login|logout <channel>      log in (the user does it) / forget the login
+  agent-reach-unleashed browser setup|status|stop   headless shared browser; login opens a window
+  agent-reach-unleashed browser profiles|use ID    choose an existing local login source
+  agent-reach-unleashed skill [link <skills-dir>]   where the agent skill is; link it for another AI
+  agent-reach-unleashed doctor [--text]             status of every channel and installed tool versions (no network)
+  agent-reach-unleashed check [channel] [--text]    live-test channels; --search tests search/jobs only
+  agent-reach-unleashed update [--check]            upgrade Agent Reach, every added channel's tools and the skill
+  agent-reach-unleashed configure <key> [value]     groq-key | openai-key | proxy | github-token
+  agent-reach-unleashed uninstall [--dry-run]       remove everything Agent Reach installed
 """
 
 
@@ -115,7 +115,7 @@ def _emit(payload: dict) -> int:
 
 
 def _usage(channel: Channel, action: Action) -> str:
-    parts = ["agent-reach", channel.name, action.name]
+    parts = ["agent-reach-unleashed", channel.name, action.name]
     for p in action.params:
         parts.append(f"<{p.name}>" if p.required else f"[--{p.name} {p.name.upper()}]")
     return " ".join(parts)
@@ -168,7 +168,7 @@ def _cmd_read(args: Sequence[str]) -> int:
     try:
         ns = parser.parse_args(list(args))
     except _ArgError as exc:
-        return _bad_input(None, "read", f"{exc}; usage: agent-reach read <url>")
+        return _bad_input(None, "read", f"{exc}; usage: agent-reach-unleashed read <url>")
     readers = [ch for ch in unified_channels() if find_action(ch, "read")]
     specific = [ch for ch in readers if ch.name != "web"]
     target = next((ch for ch in specific if ch.can_handle(ns.url)), None)
@@ -219,8 +219,8 @@ def _cmd_channels(_args: Sequence[str]) -> int:
             "schema_version": SCHEMA_VERSION,
             "ok": True,
             "commands": {
-                "read": "agent-reach read <url>  (picks the channel from the URL)",
-                "action": "agent-reach <channel> <action> [args] [--timeout SECONDS]",
+                "read": "agent-reach-unleashed read <url>  (picks the channel from the URL)",
+                "action": "agent-reach-unleashed <channel> <action> [args] [--timeout SECONDS]",
             },
             "channels": channels,
         }
@@ -286,7 +286,7 @@ def _cmd_skill(args: Sequence[str]) -> int:
     if not args:
         return _mgmt("skill", manage.skill_status)
     if args[0] != "link" or len(args) != 2:
-        return _bad_input(None, "skill", "usage: agent-reach skill [link <skills-dir>]")
+        return _bad_input(None, "skill", "usage: agent-reach-unleashed skill [link <skills-dir>]")
     return _mgmt("skill link", manage.link_skill, args[1])
 
 
@@ -385,9 +385,9 @@ def _apply_saved_proxy() -> None:
 
 def _login_info(ch: Channel):
     if ch.login_url:
-        return {"via": "browser", "logged_in": None, "command": f"agent-reach login {ch.name}"}
+        return {"via": "browser", "logged_in": None, "command": f"agent-reach-unleashed login {ch.name}"}
     if ch.session:
-        return {"via": "session", "logged_in": has_login_state(ch.session), "command": f"agent-reach login {ch.name}"}
+        return {"via": "session", "logged_in": has_login_state(ch.session), "command": f"agent-reach-unleashed login {ch.name}"}
     return None
 
 
@@ -451,7 +451,7 @@ def _cmd_login(args: Sequence[str]) -> int:
     exe = resolve(ch.login_argv[0])
     if not exe:
         return _emit(envelope(channel=ch.name, action="login", error=ReachError(
-            NEED_SETUP, f"{ch.login_argv[0]} is not installed", hint=f"Run `agent-reach add {ch.name}` first.")))
+            NEED_SETUP, f"{ch.login_argv[0]} is not installed", hint=f"Run `agent-reach-unleashed add {ch.name}` first.")))
     from .sessions import session_dir
 
     argv = [a.replace("{session}", str(session_dir(ch.session))) for a in ch.login_argv[1:]]
@@ -566,5 +566,5 @@ def main(argv: Sequence[str]) -> int:
         return _cmd_management(head, rest)
     channel = _channel(head)
     if channel is None:
-        return _bad_input(None, head, f"unknown command or channel: {head}; run `agent-reach help`")
+        return _bad_input(None, head, f"unknown command or channel: {head}; run `agent-reach-unleashed help`")
     return _cmd_action(channel, rest)
