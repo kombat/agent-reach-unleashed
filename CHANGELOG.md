@@ -7,6 +7,12 @@ All notable changes to this project will be documented in this file.
 ---
 
 
+## [1.6.0.2] - 2026-10-30 (Agent Reach Unleashed)
+
+- `setup` and `update` install a local Whisper privately inside `~/.agent-reach`, so free transcription needs no extra step: faster-whisper (whisper-ctranslate2) on Windows, macOS and Linux, plus mlx-whisper on Apple Silicon Macs. A failed Whisper install is reported but never fails a channel, and removing a channel never removes Whisper.
+- Local Whisper tries mlx-whisper, then faster-whisper, then a user-installed OpenAI Whisper, and keeps its speech model in `~/.agent-reach/models`, which `uninstall` removes.
+- A tool can allow its package install longer than 10 minutes (mlx-whisper brings PyTorch).
+
 ## [1.6.0.1] - 2026-10-30 (Agent Reach Unleashed)
 
 First release of the unofficial fork, on top of Agent Reach 1.6.0.

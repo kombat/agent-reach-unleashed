@@ -47,6 +47,7 @@ class Tool:
     exclude: Tuple[str, ...] = ()   # known-bad versions
     tested: str = ""                # reproducible default for newly installed tools
     needs: Tuple[str, ...] = ()     # tools that must be installed first
+    install_seconds: float = 600    # time allowed for the package install
 
 
 TOOLS: Dict[str, Tool] = {
@@ -61,6 +62,8 @@ TOOLS: Dict[str, Tool] = {
         ),
         Tool("opencli", "npm", "@jackwener/opencli", ("opencli",), singleton=True, floor="1.8.7", exclude=("1.8.8",), tested="1.8.7", needs=("node",)),
         Tool("ffmpeg", "ffmpeg", "imageio-ffmpeg", ("ffmpeg",)),
+        Tool("faster-whisper", "pip", "whisper-ctranslate2", ("whisper-ctranslate2",), tested="0.5.8", install_seconds=1200),
+        Tool("mlx-whisper", "pip", "mlx-whisper", ("mlx_whisper",), tested="0.4.3", install_seconds=1800),
         Tool("node", "node", "", ("node", "npm", "npx")),
         Tool("uv", "uv", "", ("uv", "uvx")),
         Tool("chrome", "chrome", "", ()),
@@ -72,6 +75,12 @@ _BY_COMMAND = {c: t for t in TOOLS.values() for c in t.commands}
 
 _SAFE_NAME = re.compile(r"^[A-Za-z0-9][A-Za-z0-9._-]*$")
 _WIN = sys.platform == "win32"
+
+
+def transcriber_tools() -> List[str]:
+    """Local Whisper engines setup installs: faster-whisper everywhere, mlx-whisper on Apple Silicon."""
+    apple_silicon = sys.platform == "darwin" and platform.machine() == "arm64"
+    return ["faster-whisper", "mlx-whisper"] if apple_silicon else ["faster-whisper"]
 
 
 def tools_root() -> Path:
@@ -324,7 +333,7 @@ def _install_pip(tool: Tool) -> None:
     if not py.is_file():
         _run([sys.executable, "-m", "venv", str(venv)], stage=f"{tool.name}:venv")
     _run([str(py), "-m", "pip", "install", "--quiet", "--disable-pip-version-check", install_spec(tool)],
-         stage=f"{tool.name}:pip_packages")
+         timeout=tool.install_seconds, stage=f"{tool.name}:pip_packages")
     if tool.kind == "ffmpeg":
         exe = _run([str(py), "-c", "import imageio_ffmpeg; print(imageio_ffmpeg.get_ffmpeg_exe())"]).strip()
         link = _private_bin(tool, "ffmpeg")

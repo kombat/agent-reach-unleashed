@@ -309,7 +309,19 @@ def _needed_tools(data: dict) -> set:
     needed = tools.closure(t for c in added for t in channel_tools(c))
     if any(_uses_browser(c) for c in added):
         needed.add("cloakbrowser")
-    return needed
+    return needed | set(tools.transcriber_tools())
+
+
+def _install_transcribers(*, upgrade: bool = False) -> List[dict]:
+    """Local Whisper is optional: a failed install is reported but never fails a channel."""
+    results = []
+    for name in tools.transcriber_tools():
+        try:
+            results.append({"ok": True, **tools.ensure(name, upgrade=upgrade)})
+        except ReachError as err:
+            results.append({"tool": name, "ok": False,
+                            "error": {"code": err.code, "message": err.message, "hint": err.hint}})
+    return results
 
 
 def _prune(data: dict) -> List[str]:
@@ -682,6 +694,7 @@ def setup() -> dict:
         except ReachError as err:
             added.append({"channel": ch.name, "ok": False, "tools": [],
                           "error": {"code": err.code, "message": err.message, "hint": err.hint}})
+    transcribers = _install_transcribers()
     optional = [_optional_entry(c) for c in _channels() if not is_added(c, data)]
     from .onboarding import capability_summary, installation_report
 
@@ -691,6 +704,7 @@ def setup() -> dict:
         "version": __version__,
         "user_actions": user_actions,
         "default_channels": added,
+        "transcribers": transcribers,
         "skill": skill,
         "optional_channels": optional,
         "logins": [{"channel": c.name, "command": f"agent-reach login {c.name}",
@@ -824,9 +838,13 @@ def sync() -> dict:
         expired = [a for a, code in (check.get("codes") or {}).items() if code == "NEED_LOGIN" and previous.get(a)]
         if expired:
             actions.append(f"The user needs to log in to {c.name} again: run `agent-reach login {c.name}`.")
+    transcribers = _install_transcribers(upgrade=True)
+    actions += [_sentence(f"Local transcription could not install {t['tool']}: {t['error']['hint'] or t['error']['message']}")
+                for t in transcribers if not t["ok"]]
     old_copies = _cleanup_old_copies()
     actions += _old_copy_actions(old_copies)
-    return {"version": __version__, "tools": synced, "problems": problems, "removed_tools": _prune(state.load()),
+    return {"version": __version__, "tools": synced, "transcribers": transcribers, "problems": problems,
+            "removed_tools": _prune(state.load()),
             "dropped_channels": dropped, "user_actions": actions, "skill": place_skill(), "migration": migration,
             "old_copies": old_copies}
 

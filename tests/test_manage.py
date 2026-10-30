@@ -303,7 +303,8 @@ def test_sync_upgrades_prunes_drops_and_reports(env):
     env["versions"]["bili-cli"] = "2.0.0"
     out = manage.sync()
     assert out["removed_tools"] == ["old-tool"] and not tools.tool_dir("old-tool").exists()
-    assert set(state.load()["tools"]) == {"bili-cli"}, "records of unused user copies are dropped, the copies kept"
+    assert set(state.load()["tools"]) == {"bili-cli", *tools.transcriber_tools()}, \
+        "records of unused user copies are dropped, the copies kept"
     assert state.load()["tools"]["bili-cli"]["version"] == "2.0.0"
     assert env["installs"].count("bili-cli") == 2, "shared tools upgrade once per sync"
     assert out["dropped_channels"] == ["xiaoyuzhou"] and "xiaoyuzhou" not in state.load()["channels"]
@@ -802,3 +803,64 @@ def test_retired_mcp_cleanup_preserves_changed_private_path(env, monkeypatch):
 def test_update_reinstalls_from_the_unleashed_fork_not_upstream():
     cmd = manage.upgrade_command("2.0.1")
     assert cmd[-1].startswith("https://github.com/kombat/agent-reach-unleashed/")
+
+
+# --- local Whisper (transcribers) ---
+
+def _failing_transcriber(monkeypatch, failing):
+    real = tools.ensure
+
+    def ensure(name, **kwargs):
+        if name == failing:
+            raise ReachError("UPSTREAM_BROKEN", f"{name}:pip_packages failed", hint="Check the network, then rerun setup.")
+        return real(name, **kwargs)
+
+    monkeypatch.setattr(tools, "ensure", ensure)
+
+
+@pytest.mark.parametrize("platform_name, machine, expected", [
+    ("darwin", "arm64", ["faster-whisper", "mlx-whisper"]),
+    ("darwin", "x86_64", ["faster-whisper"]),
+    ("win32", "AMD64", ["faster-whisper"]),
+    ("linux", "x86_64", ["faster-whisper"]),
+])
+def test_faster_whisper_everywhere_and_mlx_only_on_apple_silicon(monkeypatch, platform_name, machine, expected):
+    monkeypatch.setattr(tools.sys, "platform", platform_name)
+    monkeypatch.setattr(tools.platform, "machine", lambda: machine)
+    assert tools.transcriber_tools() == expected
+
+
+def test_setup_installs_the_transcribers_privately(env):
+    result = manage.setup()
+    assert [t["tool"] for t in result["transcribers"]] == tools.transcriber_tools()
+    assert all(t["ok"] and t["owner"] == tools.OURS and t["scope"] == "private" for t in result["transcribers"])
+
+
+def test_a_failed_transcriber_install_never_fails_a_channel(env, monkeypatch):
+    _failing_transcriber(monkeypatch, "faster-whisper")
+
+    result = manage.setup()
+
+    failed = next(t for t in result["transcribers"] if t["tool"] == "faster-whisper")
+    assert not failed["ok"] and failed["error"]["hint"] == "Check the network, then rerun setup."
+    assert all(c["ok"] for c in result["default_channels"])
+
+
+def test_update_installs_the_transcribers_and_says_when_one_fails(env, monkeypatch):
+    _failing_transcriber(monkeypatch, "faster-whisper")
+
+    out = manage.sync()
+
+    assert any(a.startswith("Local transcription could not install faster-whisper") for a in out["user_actions"])
+    assert [t["tool"] for t in out["transcribers"]] == tools.transcriber_tools()
+
+
+def test_removing_a_channel_keeps_the_transcribers(env):
+    manage.add("bili")
+    manage.setup()
+
+    manage.remove("bili")
+
+    for name in tools.transcriber_tools():
+        assert name in state.load()["tools"]
+        assert tools.tool_dir(name).exists()

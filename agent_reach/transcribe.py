@@ -24,6 +24,7 @@ from __future__ import annotations
 
 import ipaddress
 import math
+import os
 import re
 import socket
 import subprocess
@@ -58,12 +59,13 @@ PROVIDERS = {
 }
 
 LOCAL = "local"
-#: Whisper command-line programs, tried in order: Apple Silicon first, then OpenAI's own.
+#: Whisper command-line programs, tried in order: Apple Silicon (mlx), faster-whisper, then OpenAI's own.
 LOCAL_WHISPERS = {
     "mlx_whisper": ["--model", "mlx-community/whisper-large-v3-turbo", "--output-format", "txt"],
+    "whisper-ctranslate2": ["--model", "turbo", "--output_format", "txt"],
     "whisper": ["--model", "turbo", "--output_format", "txt"],
 }
-LOCAL_INSTALL_HINT = "install a local Whisper: `uv tool install mlx-whisper` (Apple Silicon) or `uv tool install openai-whisper`"
+LOCAL_INSTALL_HINT = "run `agent-reach update` to install the local Whisper that setup normally installs"
 NO_WHISPER_HINT = (
     f"To transcribe on this machine, {LOCAL_INSTALL_HINT}. Or ask the user for a free key from "
     "https://console.groq.com, then run `agent-reach configure groq-key`."
@@ -164,7 +166,7 @@ def _require_duration_within_budget(path: Path) -> float:
     return duration
 
 
-def _run(cmd: List[str], timeout: int = 600) -> None:
+def _run(cmd: List[str], timeout: int = 600, env: Optional[dict] = None) -> None:
     """Run a subprocess, raising TranscribeError on nonzero exit or timeout.
 
     cmd carries user-supplied URLs/paths into yt-dlp/ffmpeg — a stalled
@@ -177,6 +179,7 @@ def _run(cmd: List[str], timeout: int = 600) -> None:
             encoding="utf-8",
             errors="replace",
             timeout=timeout,
+            env={**os.environ, **env} if env else None,
         )
     except subprocess.TimeoutExpired:
         raise TranscribeError(f"{cmd[0]} timed out after {timeout}s")
@@ -382,11 +385,22 @@ def _provider_key(provider: str, config: Config) -> Optional[str]:
     return val or None
 
 
+def models_dir() -> Path:
+    """Where local Whisper keeps its speech model: inside ~/.agent-reach, so uninstall removes it."""
+    from agent_reach.runtime import state
+    from agent_reach.utils.paths import make_private_dir
+
+    folder = make_private_dir(state.root() / "models")
+    state.remember_path(folder, "local Whisper speech models")
+    return folder
+
+
 def _transcribe_local(chunk: Path, program: str) -> str:
     out_dir = chunk.parent / f"{chunk.stem}-text"
     out_dir.mkdir(exist_ok=True)
     flags = LOCAL_WHISPERS[Path(program).stem.lower()]
-    _run([program, str(chunk), *flags, "-o", str(out_dir)], timeout=LOCAL_CHUNK_TIMEOUT_SECONDS)
+    _run([program, str(chunk), *flags, "-o", str(out_dir)], timeout=LOCAL_CHUNK_TIMEOUT_SECONDS,
+         env={"HF_HOME": str(models_dir())})
     text = out_dir / f"{chunk.stem}.txt"
     if not text.is_file():
         raise TranscribeError(f"{Path(program).name} produced no transcript")

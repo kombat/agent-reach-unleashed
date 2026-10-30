@@ -266,7 +266,7 @@ def test_whisper_speech_without_any_transcriber_explains_what_to_install(monkeyp
     text, source, note = w.whisper_speech(tmp_path / "video.mp4")
 
     assert text is None and source is None
-    assert "mlx-whisper" in note
+    assert "agent-reach update" in note
 
 
 def test_whisper_speech_failure_is_reported_not_raised(monkeypatch, tmp_path):

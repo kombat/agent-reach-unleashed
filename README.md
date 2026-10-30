@@ -10,7 +10,7 @@ Agent Reach already ships the right tools (yt-dlp, ffmpeg, Whisper support) but 
 | Read one Instagram post or reel | Experimental; profiles and post lists only, behind a login. A reel link falls back to the web page caption | `read` gets the caption, author, date and likes with **no login**; other Instagram pages still go to the web reader |
 | Hear what a reel says | Not available | `instagram transcribe` and `instagram watch` |
 | See what is on screen | Text only | `watch` (YouTube and Instagram) saves still frames as contact-sheet images an AI can open, plus the transcript |
-| Transcribe without a paid key | Needs a Groq or OpenAI key | Uses a **local Whisper** on your machine when no key is set; audio never leaves the machine |
+| Transcribe without a paid key | Needs a Groq or OpenAI key | `setup` installs a **local Whisper** on Windows, macOS and Linux and uses it when no key is set; audio never leaves the machine |
 | YouTube subtitles | Asks for Chinese first, which YouTube refuses for English videos (one failed language fails the whole request, then the channel pauses for an hour) | English by default; any language with `--lang` |
 | `agent-reach update` | Reinstalls the official release, which would wipe these changes | Updates from this fork's releases |
 | `./test.sh` (clean-install test) | Fails on a Python syntax error and is not run in CI | Fixed, and run in CI as its own job |
@@ -22,14 +22,15 @@ uv tool install git+https://github.com/kombat/agent-reach-unleashed
 agent-reach setup
 ```
 
-For free local transcription, install one Whisper:
+This works the same on Windows, macOS and Linux. `setup` also installs free local transcription, privately inside `~/.agent-reach`, so there is no extra step:
 
-```bash
-uv tool install mlx-whisper      # Apple Silicon Macs
-uv tool install openai-whisper   # anything else
-```
+| Where | What setup installs | Size |
+|---|---|---|
+| Every computer | [faster-whisper](https://github.com/SYSTRAN/faster-whisper) (through [whisper-ctranslate2](https://github.com/Softcatala/whisper-ctranslate2)): runs on the processor, or an NVIDIA graphics card if there is one | about 220 MB |
+| Apple Silicon Macs, as well | [mlx-whisper](https://github.com/ml-explore/mlx-examples/tree/main/whisper): uses the Mac's graphics chip, and is used instead of faster-whisper there | about 1.3 GB |
+| On the first transcription | The Whisper speech model (large-v3-turbo) for the engine in use, kept in `~/.agent-reach/models` | about 1.5 GB |
 
-If a Groq or OpenAI key is configured, it is used first, exactly as in Agent Reach. The first local transcription downloads a Whisper model of about 1.5 GB into that tool's own cache (outside `~/.agent-reach`, so `agent-reach uninstall` leaves it); `uv tool uninstall` the Whisper you installed and delete its model cache to remove it.
+As a guide, transcribing a 1 min 40 s reel (including fetching it) took 13 seconds with mlx-whisper and 39 seconds with faster-whisper on the processor of an M4 Mac. Older or Windows laptops without an NVIDIA card will be slower. If a Whisper install fails, setup says so and every channel still works; `agent-reach update` tries again. If a Groq or OpenAI key is configured, it is used first, exactly as in Agent Reach. `agent-reach uninstall` removes the Whisper engines and the model. All are open source under MIT, BSD or Apache-2.0 licences.
 
 ## Use
 

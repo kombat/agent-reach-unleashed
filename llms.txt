@@ -1,6 +1,6 @@
 # Agent Reach Unleashed
 
-> An unofficial fork of Agent Reach (github.com/Panniantong/Agent-Reach, MIT) that also reads Instagram posts and reels logged out, watches YouTube and Instagram videos (transcript plus frame contact sheets, video deleted afterwards) and transcribes with a local Whisper when no key is set.
+> An unofficial fork of Agent Reach (github.com/Panniantong/Agent-Reach, MIT) that also reads Instagram posts and reels logged out, watches YouTube and Instagram videos (transcript plus frame contact sheets, video deleted afterwards) and installs a local Whisper during setup (faster-whisper everywhere, plus mlx-whisper on Apple Silicon) to transcribe when no key is set.
 
 > Makes it easier for CLI agents (Claude Code, Codex, Hermes Agent, OpenClaw, ...) to reach the internet: login-walled platforms (XiaoHongShu, Twitter/X, Reddit, LinkedIn), video content (YouTube and Bilibili subtitles, YouTube speech-to-text), Chinese platforms, and clean structured data (Xueqiu, V2EX, GitHub). One entry point, one JSON output shape.
 

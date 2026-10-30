@@ -858,7 +858,7 @@ class TestSubprocessDecoding:
 def _fake_local_run(calls):
     """Stand in for a Whisper program: write <chunk stem>.txt into its -o folder."""
 
-    def fake_run(cmd, timeout=600):
+    def fake_run(cmd, timeout=600, env=None):
         calls.append(cmd)
         out_dir = Path(cmd[cmd.index("-o") + 1])
         (out_dir / f"{Path(cmd[1]).stem}.txt").write_text("spoken words\n", encoding="utf-8")
@@ -908,7 +908,7 @@ class TestLocalWhisper:
     def test_local_without_a_whisper_installed_says_how_to_install(self, monkeypatch, chunk_file):
         monkeypatch.setattr(tr, "local_whisper", lambda: None)
 
-        with pytest.raises(tr.NoProviderConfigured, match="mlx-whisper"):
+        with pytest.raises(tr.NoProviderConfigured, match="agent-reach update"):
             tr.transcribe_chunk(chunk_file, tr.LOCAL)
 
     def test_whisper_that_writes_nothing_is_an_error(self, monkeypatch, chunk_file):
@@ -926,3 +926,36 @@ def test_windows_whisper_exe_gets_the_right_flags(monkeypatch, chunk_file):
 
     assert tr.transcribe_chunk(chunk_file, tr.LOCAL) == "spoken words\n"
     assert "--output_format" in calls[0]
+
+
+@pytest.mark.parametrize("installed, picked", [
+    ({"mlx_whisper", "whisper-ctranslate2", "whisper"}, "mlx_whisper"),
+    ({"whisper-ctranslate2", "whisper"}, "whisper-ctranslate2"),
+    ({"whisper"}, "whisper"),
+    (set(), None),
+])
+def test_local_whisper_prefers_mlx_then_faster_whisper_then_openai(monkeypatch, installed, picked):
+    from agent_reach.runtime import tools
+
+    monkeypatch.setattr(tools, "resolve", lambda cmd: f"/bin/{cmd}" if cmd in installed else None)
+
+    assert tr.local_whisper() == (f"/bin/{picked}" if picked else None)
+
+
+def test_faster_whisper_keeps_its_model_inside_agent_reach(monkeypatch, chunk_file):
+    from agent_reach.runtime import state
+
+    monkeypatch.setattr(tr, "local_whisper", lambda: "/opt/agent-reach/whisper-ctranslate2")
+    seen = {}
+
+    def fake_run(cmd, timeout=600, env=None):
+        seen.update(cmd=cmd, env=env)
+        out_dir = Path(cmd[cmd.index("-o") + 1])
+        (out_dir / f"{Path(cmd[1]).stem}.txt").write_text("spoken words\n", encoding="utf-8")
+
+    monkeypatch.setattr(tr, "_run", fake_run)
+
+    assert tr.transcribe_chunk(chunk_file, tr.LOCAL) == "spoken words\n"
+    assert seen["cmd"][2:6] == ["--model", "turbo", "--output_format", "txt"]
+    assert seen["env"] == {"HF_HOME": str(state.root() / "models")}
+    assert "models" in state.load()["owned_paths"]
