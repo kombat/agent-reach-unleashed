@@ -8,10 +8,11 @@
 
 ## Reporting a Vulnerability
 
-If you discover a security vulnerability in Agent-Reach, please report 
-it responsibly by using GitHub's private security advisory feature:
+If you discover a security vulnerability in Agent Reach Unleashed, please report 
+it responsibly by using GitHub's private security advisory feature on this fork
+(for code that also exists unchanged in the original Agent Reach, report it there too):
 
-👉 **[Report a vulnerability](https://github.com/Panniantong/Agent-Reach/security/advisories/new)**
+👉 **[Report a vulnerability](https://github.com/kombat/agent-reach-unleashed/security/advisories/new)**
 
 Please do NOT open a public GitHub issue for security vulnerabilities.
 

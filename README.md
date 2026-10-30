@@ -1,4 +1,62 @@
 
+# Agent Reach Unleashed
+
+**An unofficial fork of [Agent Reach](https://github.com/Panniantong/Agent-Reach) by Panniantong (MIT licence).** It is not affiliated with or endorsed by the original project. Everything below the line is the original README; the original English version is in [docs/README_en.md](docs/README_en.md). Install instructions inside the original README install the original project, not this fork: use the ones here.
+
+Agent Reach already ships the right tools (yt-dlp, ffmpeg, Whisper support) but does not use them for a few common jobs. This fork adds:
+
+| What you want | Agent Reach | Unleashed |
+|---|---|---|
+| Read one Instagram post or reel | Experimental; profiles and post lists only, behind a login. A reel link falls back to the web page caption | `read` gets the caption, author, date and likes with **no login**; other Instagram pages still go to the web reader |
+| Hear what a reel says | Not available | `instagram transcribe` and `instagram watch` |
+| See what is on screen | Text only | `watch` (YouTube and Instagram) saves still frames as contact-sheet images an AI can open, plus the transcript |
+| Transcribe without a paid key | Needs a Groq or OpenAI key | Uses a **local Whisper** on your machine when no key is set; audio never leaves the machine |
+| YouTube subtitles | Asks for Chinese first, which YouTube refuses for English videos (one failed language fails the whole request, then the channel pauses for an hour) | English by default; any language with `--lang` |
+| `agent-reach update` | Reinstalls the official release, which would wipe these changes | Updates from this fork's releases |
+| `./test.sh` (clean-install test) | Fails on a Python syntax error and is not run in CI | Fixed, and run in CI as its own job |
+
+## Install
+
+```bash
+uv tool install git+https://github.com/kombat/agent-reach-unleashed
+agent-reach setup
+```
+
+For free local transcription, install one Whisper:
+
+```bash
+uv tool install mlx-whisper      # Apple Silicon Macs
+uv tool install openai-whisper   # anything else
+```
+
+If a Groq or OpenAI key is configured, it is used first, exactly as in Agent Reach. The first local transcription downloads a Whisper model of about 1.5 GB into that tool's own cache (outside `~/.agent-reach`, so `agent-reach uninstall` leaves it); `uv tool uninstall` the Whisper you installed and delete its model cache to remove it.
+
+## Use
+
+```bash
+agent-reach read https://www.instagram.com/reel/<id>/                 # caption, author, date, likes
+agent-reach instagram transcribe https://www.instagram.com/reel/<id>/ # the spoken words
+agent-reach instagram watch https://www.instagram.com/reel/<id>/      # spoken words + frames every 5 s
+agent-reach youtube watch https://www.youtube.com/watch?v=<id>        # subtitles (or Whisper) + frames every 10 s
+agent-reach youtube subtitle <url> --lang zh                           # another language
+```
+
+`watch` returns the transcript in `text`, and in `raw.sheets` the paths of contact sheets (4 x 3 frames each, read left to right, top to bottom). Long videos are spread over at most 48 frames.
+
+**No video is kept.** Each run works in a folder of its own under `~/.agent-reach/watch/`. The video, any partial download and the single frames are deleted as soon as the run ends, even if it fails part way; if the program itself is stopped (a timeout or Ctrl-C), the whole run folder is deleted as it exits. Only the contact sheets stay, so the AI can open them, and the next run deletes anything untouched for an hour, including leftovers from a run that was killed outright. `agent-reach uninstall` removes the folder. `transcribe` downloads audio only and deletes it the same way.
+
+## Responsible use
+
+- **Logged out for posts and reels.** `instagram read`, `transcribe` and `watch` never send a login or cookies: they ignore any yt-dlp config file and browser cookies, and accept only `instagram.com` links. The original `instagram search`, `profile` and `posts` actions are unchanged and do use a login, which Agent Reach can copy from your Chrome; leave them alone if you want Instagram fully logged out.
+- **Personal research.** Downloading from YouTube or Instagram is outside their terms of service. The video exists only while it is transcribed and sampled for frames, then it is deleted; do not republish videos or full transcripts.
+- **Rate limits are respected.** A rate limit stops the request; nothing retries around it.
+
+## Credit and licence
+
+All of Agent Reach is the work of Panniantong and its contributors, under the MIT licence in [LICENSE](LICENSE), which this fork keeps unchanged.
+
+---
+
 <h1 align="center">👁️ Agent Reach</h1>
 
 <p align="center">

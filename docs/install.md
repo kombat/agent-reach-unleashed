@@ -19,7 +19,7 @@ For the AI doing the work. This one guide covers a fresh install, an update, and
 ## 1. Install and set up
 
 ```bash
-uv tool install https://github.com/Panniantong/Agent-Reach/releases/latest/download/agent-reach.zip
+uv tool install git+https://github.com/kombat/agent-reach-unleashed
 agent-reach setup
 ```
 
@@ -46,7 +46,7 @@ It upgrades the program, every added channel's tools and the skill. Tell the use
 1. Install uv if it is missing (see step 0).
 2. Install 1.6:
    ```bash
-   uv tool install --force https://github.com/Panniantong/Agent-Reach/releases/latest/download/agent-reach.zip
+   uv tool install --force git+https://github.com/kombat/agent-reach-unleashed
    ```
 3. Open a new shell and check `agent-reach version` prints JSON. If it still prints the old line, run `uv tool update-shell`, open a new shell and check again.
 4. Run `agent-reach setup`. It keeps `~/.agent-reach/config.yaml`, removes the old Agent Reach program (only Agent Reach itself, never the user's other tools) and refreshes the skill for every AI.

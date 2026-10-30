@@ -13,6 +13,8 @@ reddit (#364), xueqiu (#365) and v2ex (#366).
 
 from pathlib import Path
 
+import pytest
+
 from agent_reach.channels.youtube import YouTubeChannel
 
 
@@ -96,3 +98,58 @@ def test_project_installs_official_ytdlp_default_dependencies():
 
 
 
+
+
+# --- subtitle language and watch ---
+
+def _subtitle_action():
+    return next(a for a in YouTubeChannel.actions if a.name == "subtitle")
+
+
+def test_subtitles_default_to_english_only():
+    lang = next(p for p in _subtitle_action().params if p.name == "lang")
+    assert lang.default.split(",") == ["en", "en-orig"]
+
+
+def _watch_setup(monkeypatch, tmp_path):
+    from agent_reach import watch as w
+    from agent_reach.runtime.result import make_item
+
+    monkeypatch.setattr(w, "watch", lambda url, *, speech, **_k: w.Watched(
+        tmp_path, 510.0, 10, 47, [tmp_path / "sheet_01.jpg"], *speech(tmp_path / "video.mp4")))
+    monkeypatch.setattr(YouTubeChannel, "_ytdlp_read", lambda self, *, target, timeout: [
+        make_item(title="An example video", url=target, author="Example Channel", raw={"id": "EXAMPLE0001"})])
+    return w
+
+
+def test_watch_prefers_the_videos_own_subtitles(monkeypatch, tmp_path):
+    from agent_reach.runtime.result import make_item
+
+    w = _watch_setup(monkeypatch, tmp_path)
+    monkeypatch.setattr(YouTubeChannel, "_ytdlp_subtitle", lambda self, *, target, lang, timeout: [make_item(text="from captions")])
+    monkeypatch.setattr(w, "whisper_speech", lambda video: pytest.fail("Whisper ran although subtitles exist"))
+
+    item = YouTubeChannel()._ytdlp_watch(target="EXAMPLE0001", every=10, timeout=60)[0]
+
+    assert item["text"] == "from captions"
+    assert item["raw"]["transcript_source"] == "subtitles"
+    assert item["raw"]["id"] == "EXAMPLE0001"
+
+
+def test_watch_falls_back_to_whisper_when_there_are_no_subtitles(monkeypatch, tmp_path):
+    from agent_reach.runtime.result import NOT_FOUND, ReachError
+
+    w = _watch_setup(monkeypatch, tmp_path)
+
+    def no_subtitles(self, *, target, lang, timeout):
+        raise ReachError(NOT_FOUND, "no subtitles")
+
+    monkeypatch.setattr(YouTubeChannel, "_ytdlp_subtitle", no_subtitles)
+    monkeypatch.setattr(w.tr, "transcribe", lambda source: "from whisper")
+
+    item = YouTubeChannel()._ytdlp_watch(target="EXAMPLE0001", every=10, timeout=60)[0]
+
+    assert item["text"] == "from whisper"
+    assert item["raw"]["transcript_source"] == "whisper"
+    assert item["raw"]["frames"] == 47
+    assert item["raw"]["video_kept"] is False

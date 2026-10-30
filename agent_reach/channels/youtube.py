@@ -7,6 +7,7 @@ import os
 import re
 import shutil
 import sys
+import time
 
 from agent_reach.runtime.result import (
     BAD_INPUT,
@@ -119,7 +120,7 @@ class YouTubeChannel(Channel):
             "Full subtitle text of a video (manual or auto captions)",
             (
                 Param("target", "video link or id"),
-                Param("lang", "preferred languages, comma separated", required=False, default="zh-Hans,zh,en,en-orig"),
+                Param("lang", "preferred languages, comma separated", required=False, default="en,en-orig"),
             ),
             (("yt-dlp", "_ytdlp_subtitle"),),
             live_test={"target": "https://www.youtube.com/watch?v=jNQXAC9IVRw"},
@@ -129,6 +130,16 @@ class YouTubeChannel(Channel):
             "Speech-to-text of a video's audio (uses Groq/OpenAI Whisper quota)",
             (Param("target", "video link or id"),),
             (("whisper", "_whisper_transcribe"),),
+            timeout=1800,
+        ),
+        Action(
+            "watch",
+            "Transcript plus still frames saved as images an AI can look at",
+            (
+                Param("target", "video link or id"),
+                Param("every", "seconds between frames", required=False, type=int, default=10),
+            ),
+            (("yt-dlp", "_ytdlp_watch"),),
             timeout=1800,
         ),
     )
@@ -205,17 +216,37 @@ class YouTubeChannel(Channel):
         return [make_item(title=title, url=url, text=text, raw={"lang": code})]
 
     def _whisper_transcribe(self, *, target: str, timeout: float) -> list:
-        from agent_reach.transcribe import NoProviderConfigured, TranscribeError
+        from agent_reach.transcribe import NO_WHISPER_HINT, NoProviderConfigured, TranscribeError
         from agent_reach.transcribe import transcribe as _transcribe
 
         url = _video_url(target)
         try:
             text = _transcribe(url)
         except NoProviderConfigured:
-            raise ReachError(
-                "NEED_SETUP", "no Whisper API key configured",
-                hint="Ask the user for a free key from https://console.groq.com, then run `agent-reach configure groq-key`.",
-            ) from None
+            raise ReachError("NEED_SETUP", "no Whisper configured", hint=NO_WHISPER_HINT) from None
         except TranscribeError as exc:
             raise ReachError("UPSTREAM_BROKEN", str(exc)[:300]) from None
         return [make_item(url=url, text=text)]
+
+    def _ytdlp_watch(self, *, target: str, every: int, timeout: float) -> list:
+        from agent_reach import watch as w
+        from agent_reach.transcribe import TranscribeError
+
+        url = _video_url(target)
+        started = time.monotonic()
+        info = self._ytdlp_read(target=url, timeout=timeout)[0]
+        left = timeout - (time.monotonic() - started)
+
+        def speech(video):
+            try:
+                return self._ytdlp_subtitle(target=url, lang="en,en-orig", timeout=timeout)[0]["text"], "subtitles", None
+            except ReachError:
+                return w.whisper_speech(video)
+
+        try:
+            watched = w.watch(url, run_ytdlp=_run_ytdlp, speech=speech, timeout=left, every=every)
+        except TranscribeError as exc:
+            raise ReachError("UPSTREAM_BROKEN", str(exc)[:300]) from None
+        raw = {**(info.get("raw") or {}), **w.describe(watched)}
+        return [make_item(title=info.get("title"), url=url, author=info.get("author"),
+                          published_at=info.get("published_at"), text=watched.text, raw=raw)]

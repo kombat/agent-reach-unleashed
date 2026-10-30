@@ -7,6 +7,17 @@ All notable changes to this project will be documented in this file.
 ---
 
 
+## [1.6.0.1] - 2026-10-30 (Agent Reach Unleashed)
+
+First release of the unofficial fork, on top of Agent Reach 1.6.0.
+
+- Instagram posts and reels: `read`, `transcribe` and `watch` without a login. They ignore any yt-dlp config file and all cookies, use only yt-dlp's Instagram extractor and accept only `instagram.com` links; other Instagram pages and login walls fall back to the web reader.
+- `watch` for YouTube and Instagram: transcript plus contact sheets of still frames (at most 48). Each run has its own folder; the video, partial downloads and single frames are deleted when the run ends, the whole folder if the program exits mid-run, and anything untouched for an hour by the next run. Every step only gets the time left.
+- Local Whisper (mlx-whisper or openai-whisper) transcribes when no Groq or OpenAI key is set.
+- YouTube subtitles default to English.
+- `update`, install docs, issues and security reports point at this fork.
+- `test.sh` fixed and run in CI.
+
 ## [1.6.0] - 2026-10-23
 
 中文：

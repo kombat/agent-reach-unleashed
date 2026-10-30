@@ -516,7 +516,8 @@ class TestOrchestrator:
 
         assert provider_calls == []
 
-    def test_no_provider_configured_fails_fast(self, fake_config, chunk_file):
+    def test_no_provider_configured_fails_fast(self, monkeypatch, fake_config, chunk_file):
+        monkeypatch.setattr(tr, "local_whisper", lambda: None)
         with pytest.raises(tr.NoProviderConfigured):
             tr.transcribe(str(chunk_file), config=fake_config)
 
@@ -849,3 +850,79 @@ class TestSubprocessDecoding:
             tr._probe_audio_duration(tmp_path / "audio.m4a")
 
 
+
+
+# --- local Whisper ------------------------------------------------------ #
+
+
+def _fake_local_run(calls):
+    """Stand in for a Whisper program: write <chunk stem>.txt into its -o folder."""
+
+    def fake_run(cmd, timeout=600):
+        calls.append(cmd)
+        out_dir = Path(cmd[cmd.index("-o") + 1])
+        (out_dir / f"{Path(cmd[1]).stem}.txt").write_text("spoken words\n", encoding="utf-8")
+
+    return fake_run
+
+
+class TestLocalWhisper:
+    def test_auto_uses_local_whisper_when_no_key_is_set(
+        self, monkeypatch, fake_config, tmp_path, chunk_file, bounded_audio_duration
+    ):
+        compressed = tmp_path / "compressed.m4a"
+        compressed.write_bytes(b"compressed")
+        monkeypatch.setattr(tr, "compress_audio", lambda *_args: compressed)
+        monkeypatch.setattr(tr, "local_whisper", lambda: "/opt/bin/mlx_whisper")
+        calls: List[list] = []
+        monkeypatch.setattr(tr, "_run", _fake_local_run(calls))
+        monkeypatch.setattr(tr.requests, "post", lambda *a, **k: pytest.fail("audio left the machine"))
+
+        text = tr.transcribe(str(chunk_file), out_dir=tmp_path / "work", config=fake_config)
+
+        assert text == "spoken words"
+        assert calls[0][:2] == ["/opt/bin/mlx_whisper", str(compressed)]
+        assert "--output-format" in calls[0]
+
+    def test_configured_key_still_wins_over_local_whisper(
+        self, monkeypatch, fake_config, tmp_path, chunk_file, bounded_audio_duration
+    ):
+        fake_config.set("groq_api_key", "gsk_test")
+        compressed = tmp_path / "compressed.m4a"
+        compressed.write_bytes(b"compressed")
+        monkeypatch.setattr(tr, "compress_audio", lambda *_args: compressed)
+        monkeypatch.setattr(tr, "local_whisper", lambda: "/opt/bin/mlx_whisper")
+        monkeypatch.setattr(tr, "_run", lambda *a, **k: pytest.fail("local Whisper ran"))
+        monkeypatch.setattr(tr.requests, "post", lambda *a, **k: FakeResponse(200, "via-groq"))
+
+        assert tr.transcribe(str(chunk_file), out_dir=tmp_path / "work", config=fake_config) == "via-groq"
+
+    def test_openai_whisper_program_gets_its_own_flags(self, monkeypatch, chunk_file):
+        monkeypatch.setattr(tr, "local_whisper", lambda: "/usr/bin/whisper")
+        calls: List[list] = []
+        monkeypatch.setattr(tr, "_run", _fake_local_run(calls))
+
+        assert tr.transcribe_chunk(chunk_file, tr.LOCAL) == "spoken words\n"
+        assert "--output_format" in calls[0]
+
+    def test_local_without_a_whisper_installed_says_how_to_install(self, monkeypatch, chunk_file):
+        monkeypatch.setattr(tr, "local_whisper", lambda: None)
+
+        with pytest.raises(tr.NoProviderConfigured, match="mlx-whisper"):
+            tr.transcribe_chunk(chunk_file, tr.LOCAL)
+
+    def test_whisper_that_writes_nothing_is_an_error(self, monkeypatch, chunk_file):
+        monkeypatch.setattr(tr, "local_whisper", lambda: "/opt/bin/mlx_whisper")
+        monkeypatch.setattr(tr, "_run", lambda *a, **k: None)
+
+        with pytest.raises(tr.TranscribeError, match="produced no transcript"):
+            tr.transcribe_chunk(chunk_file, tr.LOCAL)
+
+
+def test_windows_whisper_exe_gets_the_right_flags(monkeypatch, chunk_file):
+    monkeypatch.setattr(tr, "local_whisper", lambda: "C:/Tools/Whisper.EXE")
+    calls: List[list] = []
+    monkeypatch.setattr(tr, "_run", _fake_local_run(calls))
+
+    assert tr.transcribe_chunk(chunk_file, tr.LOCAL) == "spoken words\n"
+    assert "--output_format" in calls[0]

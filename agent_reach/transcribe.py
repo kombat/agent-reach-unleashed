@@ -2,8 +2,10 @@
 """Whisper audio transcription with explicit provider routing.
 
 Downloads audio (yt-dlp), compresses + chunks (ffmpeg), and posts to a
-Whisper-compatible API. Auto mode selects the first configured provider and
-only sends audio to another provider when the caller explicitly opts in.
+Whisper-compatible API, or runs a Whisper installed on this machine
+("local", no key, audio never leaves the machine). Auto mode selects the
+first configured provider and only sends audio to another provider when the
+caller explicitly opts in.
 
 Public entry point:
     transcribe(
@@ -54,6 +56,19 @@ PROVIDERS = {
         "key_field": "openai_api_key",
     },
 }
+
+LOCAL = "local"
+#: Whisper command-line programs, tried in order: Apple Silicon first, then OpenAI's own.
+LOCAL_WHISPERS = {
+    "mlx_whisper": ["--model", "mlx-community/whisper-large-v3-turbo", "--output-format", "txt"],
+    "whisper": ["--model", "turbo", "--output_format", "txt"],
+}
+LOCAL_INSTALL_HINT = "install a local Whisper: `uv tool install mlx-whisper` (Apple Silicon) or `uv tool install openai-whisper`"
+NO_WHISPER_HINT = (
+    f"To transcribe on this machine, {LOCAL_INSTALL_HINT}. Or ask the user for a free key from "
+    "https://console.groq.com, then run `agent-reach configure groq-key`."
+)
+LOCAL_CHUNK_TIMEOUT_SECONDS = 1800
 
 
 class TranscribeError(RuntimeError):
@@ -352,10 +367,30 @@ def chunk_audio(src: Path, out_dir: Path, segment_seconds: int = CHUNK_SECONDS) 
     return chunks
 
 
+def local_whisper() -> Optional[str]:
+    """Path of the first installed local Whisper program, or None."""
+    from agent_reach.runtime.tools import resolve
+
+    return next((path for path in map(resolve, LOCAL_WHISPERS) if path), None)
+
+
 def _provider_key(provider: str, config: Config) -> Optional[str]:
+    if provider == LOCAL:
+        return local_whisper()
     field = PROVIDERS[provider]["key_field"]
     val = config.get(field)
     return val or None
+
+
+def _transcribe_local(chunk: Path, program: str) -> str:
+    out_dir = chunk.parent / f"{chunk.stem}-text"
+    out_dir.mkdir(exist_ok=True)
+    flags = LOCAL_WHISPERS[Path(program).stem.lower()]
+    _run([program, str(chunk), *flags, "-o", str(out_dir)], timeout=LOCAL_CHUNK_TIMEOUT_SECONDS)
+    text = out_dir / f"{chunk.stem}.txt"
+    if not text.is_file():
+        raise TranscribeError(f"{Path(program).name} produced no transcript")
+    return text.read_text(encoding="utf-8", errors="replace")
 
 
 def transcribe_chunk(
@@ -366,6 +401,11 @@ def transcribe_chunk(
     timeout: int = 120,
 ) -> str:
     """Transcribe one chunk via the named provider. Raises TranscribeError on failure."""
+    if provider == LOCAL:
+        program = local_whisper()
+        if not program:
+            raise NoProviderConfigured(f"{LOCAL}: no Whisper installed ({LOCAL_INSTALL_HINT})")
+        return _transcribe_local(chunk, program)
     if provider not in PROVIDERS:
         raise TranscribeError(f"unknown provider: {provider}")
     cfg = config or Config()
@@ -396,10 +436,10 @@ def transcribe_chunk(
 
 def _provider_order(provider: str) -> List[str]:
     if provider == "auto":
-        return ["groq", "openai"]
-    if provider in PROVIDERS:
+        return ["groq", "openai", LOCAL]
+    if provider in PROVIDERS or provider == LOCAL:
         return [provider]
-    raise TranscribeError(f"unknown provider: {provider} (use groq|openai|auto)")
+    raise TranscribeError(f"unknown provider: {provider} (use groq|openai|local|auto)")
 
 
 def transcribe(
@@ -412,8 +452,9 @@ def transcribe(
 ) -> str:
     """Transcribe a URL or local file path. Returns the joined transcript text.
 
-    `provider` is one of `auto`, `groq`, or `openai`. Auto mode selects the
-    first configured provider (Groq, then OpenAI). In auto mode only, set
+    `provider` is one of `auto`, `groq`, `openai` or `local`. Auto mode selects
+    the first configured provider (Groq, then OpenAI, then a local Whisper). In
+    auto mode only, set
     `allow_provider_fallback=True` to permit sending failed chunks to the next
     configured provider; using the flag with an explicit provider is rejected.
     `out_dir` defaults to a fresh temp directory; intermediate files stay there.
@@ -428,7 +469,7 @@ def transcribe(
 
     # Validate at least one provider is configured before doing expensive work.
     if not configured:
-        names = ", ".join(PROVIDERS[p]["key_field"] for p in candidates)
+        names = ", ".join(PROVIDERS[p]["key_field"] if p in PROVIDERS else LOCAL_INSTALL_HINT for p in candidates)
         raise NoProviderConfigured(f"no provider key configured (need one of: {names})")
 
     order = configured

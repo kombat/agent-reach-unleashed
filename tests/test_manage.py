@@ -797,3 +797,8 @@ def test_retired_mcp_cleanup_preserves_changed_private_path(env, monkeypatch):
     monkeypatch.setattr(paths, "read_small_text_no_follow", changed)
     assert manage._retired_mcp_notice()
     assert path.read_text() == "unchanged"
+
+
+def test_update_reinstalls_from_the_unleashed_fork_not_upstream():
+    cmd = manage.upgrade_command("2.0.1")
+    assert cmd[-1].startswith("https://github.com/kombat/agent-reach-unleashed/")

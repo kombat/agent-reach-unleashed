@@ -17,7 +17,7 @@ from agent_reach.utils.paths import (
 
 from . import state
 
-REPO = "Panniantong/Agent-Reach"
+REPO = "kombat/agent-reach-unleashed"
 FETCH_TIMEOUT = 10.0
 NOTES_MAX = 2000
 

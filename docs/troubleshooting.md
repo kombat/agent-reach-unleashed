@@ -61,7 +61,7 @@ Agent Reach is installed with uv. A copy installed another way (pip or pipx, as 
 A new version broke something? Go back to the previous release, then line the tools and skill up with it:
 
 ```bash
-uv tool install --force https://github.com/Panniantong/Agent-Reach/archive/refs/tags/v<previous>.zip
+uv tool install --force https://github.com/kombat/agent-reach-unleashed/archive/refs/tags/v<previous>.zip
 agent-reach update --sync-only
 ```
 
@@ -83,4 +83,4 @@ It is used for every Agent Reach command. An `HTTPS_PROXY` set in your shell tak
 
 - `agent-reach update` and try again.
 - Remove and re-add a channel: `agent-reach remove <channel>` then `agent-reach add <channel>` (remove also clears its login, its site cookies in the Agent Reach browser, and its private tools nobody else uses).
-- Open an issue at https://github.com/Panniantong/Agent-Reach/issues with the output of `agent-reach doctor --text` (it starts with the version) and `agent-reach check <channel> --text`. Remove any personal data first.
+- Open an issue at https://github.com/kombat/agent-reach-unleashed/issues with the output of `agent-reach doctor --text` (it starts with the version) and `agent-reach check <channel> --text`. Remove any personal data first.

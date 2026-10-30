@@ -14,12 +14,12 @@ Read when the user asks what can be fetched or how complete a result is. Declare
 | 渠道 | 公开路径可尝试 | Reach 补充与边界 |
 |---|---|---|
 | GitHub | 公开仓库、README、Issue/PR | 仓库搜索、仓库/Issue/PR 读取和返回的评论；私有权限另行判断 |
-| YouTube | 搜索、标题、简介；原生工具可能取得部分评论及字幕正文 | search/read/subtitle/transcribe；当前没有统一 comments 动作；轨道列表不等于字幕正文，无字幕时转录依赖相应工具 |
+| YouTube | 搜索、标题、简介；原生工具可能取得部分评论及字幕正文 | search/read/subtitle/transcribe/watch；当前没有统一 comments 动作；轨道列表不等于字幕正文，无字幕时转录依赖相应工具（含本机 Whisper）；watch 另给画面拼图 |
 | B 站 | 搜索、简介；部分公开接口可返回评论及父子 ID | search/read/hot/subtitle；当前没有统一 comments 动作；字幕随视频和访问路径而异 |
 | Reddit | 搜索、正文、部分评论；某些公开 JSON 可含父子 ID | 浏览器 search/read/subreddit；登录依所选路径决定，不保证完整评论树、全部回复；不提供发评论 |
 | X/Twitter | 搜索命中的公开单帖；部分官方公开嵌入可返回全文 | search/profile/tweets/thread；单帖可读不代表回复流可读，不保证完整评论树 |
 | 小红书 | 公开列表或索引可能有笔记 ID、作者、标题，空字段不能补猜 | search/read/comments；文字描述、顶级评论及已加载回复；不保证全部评论，不声称理解图片/视频 |
-| Instagram | 部分索引和主页浅层信息；HTML 应用壳不算帖文 | search 搜用户、profile 主页、posts 指定用户帖子描述；无统一评论动作，不声称理解图片/视频 |
+| Instagram | 部分索引和主页浅层信息；HTML 应用壳不算帖文 | search 搜用户、profile 主页、posts 指定用户帖子描述（需登录）；read 不登录读单条帖子/reel 的文案、作者、日期、点赞；transcribe/watch 不登录取 reel 语音和画面拼图；无统一评论动作 |
 | Facebook | 部分索引或 HTML 摘要；摘要可能被截断 | search/profile；无统一详情或评论动作，不把搜索摘要当全文 |
 | LinkedIn | 搜公开职位、读公开 JD | jobs/read 先尝试公开网页；指定 opencli 才直接走站内；不保证所有职位可读 |
 | BOSS | 搜索索引中可能有职位摘要 | search/read 职位列表与 JD；不能根据编码薪资猜数字；详情后备能力依渠道声明 |

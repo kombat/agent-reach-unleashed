@@ -9,7 +9,7 @@ description: >
   不做：发帖、评论、点赞、私信等任何写操作；不替用户登录、不索要密码。
   公开内容优先用 Agent 自带工具，Reach 补缺口。
 metadata:
-  homepage: https://github.com/Panniantong/Agent-Reach
+  homepage: https://github.com/kombat/agent-reach-unleashed
   version: "{{VERSION}}"
 ---
 
@@ -61,6 +61,7 @@ agent-reach read <链接>                   # 按链接自动选渠道
 ## 平台注意
 
 - 小红书 read 只返回文字描述，不要声称看懂了图片或视频。
+- 要"看"YouTube 视频或 Instagram reel，运行 `agent-reach <youtube|instagram> watch <链接>`：`text` 是说话内容（字幕或 Whisper 转录），`raw.sheets` 是按 `raw.frame_every_seconds` 截取的画面拼图。描述画面前先打开这些图片，并说明哪些来自画面、哪些来自语音。Instagram 帖子和 reel 不登录读取，不要替用户登录。
 - Boss 直聘搜索结果 `salary_encoded=true` 时绝不猜薪资数字；read 职位链接拿详情里的可读薪资。
 - 各平台公开能做什么、Reach 补什么，见 [能力边界](references/capabilities.md)：用户问"能查什么/查得全吗"或要判断结果完整度时读它。
 

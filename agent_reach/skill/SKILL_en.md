@@ -10,7 +10,7 @@ description: >
   Does not: post, comment, like, message or any other write; never logs in for the user or asks for passwords.
   Prefer your own tools for public content; Reach fills the gaps.
 metadata:
-  homepage: https://github.com/Panniantong/Agent-Reach
+  homepage: https://github.com/kombat/agent-reach-unleashed
   version: "{{VERSION}}"
 ---
 
@@ -62,6 +62,7 @@ The first time a site is used, if the user's Chrome is connected to the OpenCLI 
 ## Platform notes
 
 - Xiaohongshu read returns text descriptions only; never claim to understand the images or video.
+- To watch a YouTube video or an Instagram reel, run `agent-reach <youtube|instagram> watch <url>`: `text` is the spoken words (subtitles, or Whisper), and `raw.sheets` are contact-sheet images of frames taken every `raw.frame_every_seconds`. Open the sheets before describing what is on screen, and say which points came from the frames and which from the speech. Instagram posts and reels are read logged out; never log in for them.
 - When a Boss Zhipin search result has `salary_encoded=true`, never guess the salary digits; read the job link for the readable salary in the detail.
 - What each platform offers publicly and what Reach adds is in [Capability scope](references/capabilities.md): read it when the user asks "what can it get / is it complete" or you need to judge completeness.
 

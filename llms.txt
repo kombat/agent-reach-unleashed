@@ -1,11 +1,13 @@
-# Agent Reach
+# Agent Reach Unleashed
+
+> An unofficial fork of Agent Reach (github.com/Panniantong/Agent-Reach, MIT) that also reads Instagram posts and reels logged out, watches YouTube and Instagram videos (transcript plus frame contact sheets, video deleted afterwards) and transcribes with a local Whisper when no key is set.
 
 > Makes it easier for CLI agents (Claude Code, Codex, Hermes Agent, OpenClaw, ...) to reach the internet: login-walled platforms (XiaoHongShu, Twitter/X, Reddit, LinkedIn), video content (YouTube and Bilibili subtitles, YouTube speech-to-text), Chinese platforms, and clean structured data (Xueqiu, V2EX, GitHub). One entry point, one JSON output shape.
 
 ## Install
 
-- [Installation Guide](https://github.com/Panniantong/Agent-Reach/blob/main/docs/install.md): agent-executable steps
-- Install from GitHub only, with uv: `uv tool install https://github.com/Panniantong/Agent-Reach/archive/refs/tags/v1.6.0.zip`, then `agent-reach setup`. The PyPI package named `agent-reach` is NOT this project.
+- [Installation Guide](https://github.com/kombat/agent-reach-unleashed/blob/main/docs/install.md): agent-executable steps
+- Install from GitHub only, with uv: `uv tool install git+https://github.com/kombat/agent-reach-unleashed`, then `agent-reach setup`. The PyPI package named `agent-reach` is NOT this project.
 - `setup` turns on the default channels and places one copy of the skill at `~/.agents/skills/agent-reach/SKILL.md`, linked into the skill folders of other AIs found on the machine; `agent-reach skill link <skills-dir>` adds another AI.
 
 ## Commands
@@ -27,7 +29,7 @@
 
 ## Docs
 
-- [README (中文)](https://github.com/Panniantong/Agent-Reach/blob/main/README.md)
-- [README (English)](https://github.com/Panniantong/Agent-Reach/blob/main/docs/README_en.md)
-- [Update](https://github.com/Panniantong/Agent-Reach/blob/main/docs/update.md)
-- [Troubleshooting](https://github.com/Panniantong/Agent-Reach/blob/main/docs/troubleshooting.md)
+- [README (中文)](https://github.com/kombat/agent-reach-unleashed/blob/main/README.md)
+- [README (English)](https://github.com/kombat/agent-reach-unleashed/blob/main/docs/README_en.md)
+- [Update](https://github.com/kombat/agent-reach-unleashed/blob/main/docs/update.md)
+- [Troubleshooting](https://github.com/kombat/agent-reach-unleashed/blob/main/docs/troubleshooting.md)

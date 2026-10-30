@@ -1,6 +1,6 @@
 [project]
 name = "agent-reach"
-version = "1.6.0"
+version = "1.6.0.1"
 description = "Internet access for AI agents: one CLI with JSON output to search and read the web, YouTube, GitHub, V2EX and more."
 readme = "README.md"
 license = {text = "MIT"}
@@ -47,9 +47,9 @@ dev = [
 agent-reach = "agent_reach.cli:main"
 
 [project.urls]
-Homepage = "https://github.com/Panniantong/agent-reach"
-Repository = "https://github.com/Panniantong/agent-reach"
-Issues = "https://github.com/Panniantong/agent-reach/issues"
+Homepage = "https://github.com/kombat/agent-reach-unleashed"
+Repository = "https://github.com/kombat/agent-reach-unleashed"
+Issues = "https://github.com/kombat/agent-reach-unleashed/issues"
 
 [build-system]
 requires = ["hatchling"]
