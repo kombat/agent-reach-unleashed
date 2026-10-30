@@ -371,12 +371,14 @@ def remove(name: str) -> dict:
 
 # ── skill (the agent-facing instructions) ──
 #
-# One real copy in ~/.agents/skills/agent-reach (read natively by Codex, OpenCode,
+# One real copy in ~/.agents/skills/agent-reach-unleashed (read natively by Codex, OpenCode,
 # Cline, Warp, Zed). AIs that do not read that folder get a symlink in their own
 # skills folder, but only when their config folder exists. Source for the folders:
 # the vercel-labs/skills supported-agents table.
 
-SKILL_NAME = "agent-reach"
+SKILL_NAME = "agent-reach-unleashed"
+#: Names earlier versions placed the skill under; recorded copies and links are retired.
+OLD_SKILL_NAMES = ("agent-reach",)
 
 
 def _openclaw_home() -> Path:
@@ -419,9 +421,11 @@ def skill_dir() -> Path:
 def _skill_lang() -> str:
     for var in ("AGENT_REACH_LANG", "LC_ALL", "LC_MESSAGES", "LANG"):
         v = os.environ.get(var, "").strip().lower()
+        if v.startswith("zh"):
+            return "zh"
         if v.startswith("en"):
             return "en"
-    return "zh"
+    return "en"
 
 
 def render_skill(lang: Optional[str] = None) -> str:
@@ -439,8 +443,8 @@ def render_skill(lang: Optional[str] = None) -> str:
     return template.replace("{{CHANNEL_TABLE}}", "\n".join(rows)).replace("{{VERSION}}", __version__)
 
 
-def _is_our_copy(path: Path) -> bool:
-    """A real folder holding our SKILL.md (frontmatter `name: agent-reach`)."""
+def _is_our_copy(path: Path, name: str = SKILL_NAME) -> bool:
+    """A real folder holding our SKILL.md (frontmatter `name: <name>`)."""
     if path.is_symlink() or not path.is_dir():
         return False
     try:
@@ -454,7 +458,7 @@ def _is_our_copy(path: Path) -> bool:
             return False
         key, _, value = line.partition(":")
         if key.strip() == "name":
-            return value.strip().strip("'\"") == SKILL_NAME
+            return value.strip().strip("'\"") == name
     return False
 
 
@@ -513,7 +517,7 @@ def _link_into(skills_dir: Path, text: str) -> tuple:
         return None, f"a symlink to {os.readlink(target)} is already there"
     if target.exists():
         if not _is_our_copy(target):
-            return None, "a different skill named agent-reach is already there"
+            return None, f"a different skill named {SKILL_NAME} is already there"
         _write_copy(target, text)
         return "copy", None
     skills_dir.mkdir(parents=True, exist_ok=True)
@@ -530,8 +534,34 @@ def _agent_for(skills_dir: Path) -> str:
     return next((name for name, (_, d) in linked_agents().items() if d == skills_dir), "custom")
 
 
+def _retire_old_names() -> List[str]:
+    """Remove skill copies and links recorded under an old name; unrecorded ones are left alone."""
+    data = state.load()
+    old_real = {str(skill_dir().parent / n) for n in OLD_SKILL_NAMES}
+    recorded = [r["path"] for r in data["skill"]["links"]] + list(data["skill"].get("files", {}))
+    removed = []
+    for p in dict.fromkeys(recorded):
+        path = Path(p)
+        if path.name not in OLD_SKILL_NAMES:
+            continue
+        if path.is_symlink() and os.path.realpath(path) in {os.path.realpath(r) for r in old_real}:
+            path.unlink()
+            removed.append(p)
+        elif _is_our_copy(path, path.name):
+            _remove(path)
+            removed.append(p)
+
+    def forget(saved):
+        saved["skill"]["links"] = [r for r in saved["skill"]["links"] if Path(r["path"]).name not in OLD_SKILL_NAMES]
+        for p in [p for p in saved["skill"].get("files", {}) if Path(p).name in OLD_SKILL_NAMES]:
+            saved["skill"]["files"].pop(p)
+    state.mutate(forget)
+    return removed
+
+
 def place_skill() -> dict:
     """Write the real copy, link every detected AI, refresh recorded links/copies."""
+    removed = _retire_old_names()
     text = render_skill()
     _write_real_copy(text)
     data = state.load()
@@ -552,7 +582,7 @@ def place_skill() -> dict:
         else:
             not_linked.append({"agent": agent, "path": str(target), "reason": reason})
     state.mutate(lambda saved: saved["skill"].update(links=links))
-    return {**skill_status(), "not_linked": not_linked, "removed_old_copies": []}
+    return {**skill_status(), "not_linked": not_linked, "removed_old_copies": removed}
 
 
 def skill_status() -> dict:

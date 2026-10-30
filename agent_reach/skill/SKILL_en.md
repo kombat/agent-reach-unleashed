@@ -1,7 +1,10 @@
 ---
-name: agent-reach
+name: agent-reach-unleashed
 description: >
-  Read-only access to platform content: search, read posts, view comments, fetch subtitles, stock quotes and jobs.
+  Agent Reach Unleashed. Read-only access to platform content: search, read posts, comments, subtitles, quotes, jobs.
+  Watches YouTube videos and Instagram reels: what is said (subtitles or local Whisper) plus still frames,
+  to summarise what a video says and shows; reads Instagram reels without a login.
+  Use when asked to watch, transcribe or summarise a video or reel.
   Use when the user mentions or pastes a link from Xiaohongshu, Bilibili, Twitter/X, Reddit,
   YouTube (subtitles, transcripts), GitHub, V2EX, Xueqiu/stock quotes, LinkedIn/Boss Zhipin jobs,
   Instagram, Facebook or Xiaoyuzhou podcasts; or says "search / look up / read this link" and your built-in
@@ -14,7 +17,7 @@ metadata:
   version: "{{VERSION}}"
 ---
 
-# Agent Reach
+# Agent Reach Unleashed
 
 One command for every platform: `agent-reach`. Read-only; prints one JSON object by default.
 

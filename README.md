@@ -13,6 +13,7 @@ Agent Reach already ships the right tools (yt-dlp, ffmpeg, Whisper support) but 
 | Transcribe without a paid key | Needs a Groq or OpenAI key | `setup` installs a **local Whisper** on Windows, macOS and Linux and uses it when no key is set; audio never leaves the machine |
 | YouTube subtitles | Asks for Chinese first, which YouTube refuses for English videos (one failed language fails the whole request, then the channel pauses for an hour) | English by default; any language with `--lang` |
 | `agent-reach update` | Reinstalls the official release, which would wipe these changes | Updates from this fork's releases |
+| Skill for AI agents | `agent-reach`, placed in Chinese unless the system language is English, and its description does not mention videos | `agent-reach-unleashed`, in English unless the system language is Chinese, and it says it watches videos and reels |
 | `./test.sh` (clean-install test) | Fails on a Python syntax error and is not run in CI | Fixed, and run in CI as its own job |
 
 ## Install

@@ -8,7 +8,7 @@
 
 - [Installation Guide](https://github.com/kombat/agent-reach-unleashed/blob/main/docs/install.md): agent-executable steps
 - Install from GitHub only, with uv: `uv tool install git+https://github.com/kombat/agent-reach-unleashed`, then `agent-reach setup`. The PyPI package named `agent-reach` is NOT this project.
-- `setup` turns on the default channels and places one copy of the skill at `~/.agents/skills/agent-reach/SKILL.md`, linked into the skill folders of other AIs found on the machine; `agent-reach skill link <skills-dir>` adds another AI.
+- `setup` turns on the default channels and places one copy of the skill at `~/.agents/skills/agent-reach-unleashed/SKILL.md`, linked into the skill folders of other AIs found on the machine; `agent-reach skill link <skills-dir>` adds another AI.
 
 ## Commands
 

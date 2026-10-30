@@ -1,7 +1,9 @@
 ---
-name: agent-reach
+name: agent-reach-unleashed
 description: >
-  只读读取各平台内容：搜索、读帖、看评论、取字幕、查行情和职位。
+  Agent Reach Unleashed。只读读取各平台内容：搜索、读帖、看评论、取字幕、查行情和职位。
+  能"看"YouTube 视频和 Instagram reel：说话内容（字幕或本机 Whisper 转录）加画面截图，便于总结视频讲了什么、出现了什么；
+  不登录读取 Instagram 帖子和 reel。用户要看、转录或总结视频/reel 时使用。
   Use when 用户提到或贴出链接：小红书/xiaohongshu、B站/bilibili、Twitter/X、Reddit、
   YouTube（字幕、转录）、GitHub、V2EX、雪球/股票行情、LinkedIn/Boss直聘 职位、
   Instagram、Facebook、小宇宙播客；或说"帮我搜/看看/读一下这个链接"而自带网页搜索/读取不可用、失败或拿不到正文；
@@ -13,7 +15,7 @@ metadata:
   version: "{{VERSION}}"
 ---
 
-# Agent Reach
+# Agent Reach Unleashed
 
 一个命令读所有平台：`agent-reach`。只读，默认输出一行 JSON。
 

@@ -219,7 +219,7 @@ def test_skill_command_links_a_skills_dir_and_reports_it(capsys, fake_cli):
     target = home_dir() / "my-ai" / "skills"
     code, out = _run(capsys, ["skill", "link", str(target)])
     assert code == 0 and out["action"] == "skill link"
-    assert out["result"]["links"] == [str(target / "agent-reach")]
+    assert out["result"]["links"] == [str(target / "agent-reach-unleashed")]
     code, out = _run(capsys, ["skill"])
     assert code == 0 and out["result"]["installed"] is True
     code, out = _run(capsys, ["skill", "unlink"])

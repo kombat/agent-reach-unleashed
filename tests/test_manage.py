@@ -11,6 +11,7 @@ import json
 import os
 import re
 import shutil
+from pathlib import Path
 
 import pytest
 
@@ -646,7 +647,7 @@ def test_skill_lists_every_channel_and_has_no_placeholders(env):
 
 def _seed_our_copy(path):
     path.mkdir(parents=True)
-    (path / "SKILL.md").write_text("---\nname: agent-reach\ndescription: old\n---\nold\n")
+    (path / "SKILL.md").write_text("---\nname: agent-reach-unleashed\ndescription: old\n---\nold\n")
     (path / "references").mkdir()
 
 
@@ -655,11 +656,11 @@ def test_skill_one_real_copy_linked_only_for_present_ais(env):
     for d in (".claude", ".codex", ".openclaw"):
         (home / d).mkdir()
     result = manage.place_skill()
-    real = home / ".agents" / "skills" / "agent-reach"
+    real = home / ".agents" / "skills" / "agent-reach-unleashed"
     assert (real / "SKILL.md").is_file()
     for name in ("sessions.md", "maintenance.md"):
         assert (real / "references" / name).is_file()
-    for link in (home / ".claude" / "skills" / "agent-reach", home / ".openclaw" / "skills" / "agent-reach"):
+    for link in (home / ".claude" / "skills" / "agent-reach-unleashed", home / ".openclaw" / "skills" / "agent-reach-unleashed"):
         assert link.is_symlink() and os.path.realpath(link) == os.path.realpath(real)
     assert not (home / ".codex" / "skills").exists(), "codex reads ~/.agents/skills itself"
     assert not (home / ".cursor").exists(), "absent AIs get nothing"
@@ -669,12 +670,12 @@ def test_skill_one_real_copy_linked_only_for_present_ais(env):
 
 def test_skill_replaces_our_old_copy_but_not_a_foreign_one(env):
     home = home_dir()
-    ours = home / ".claude" / "skills" / "agent-reach"
+    ours = home / ".claude" / "skills" / "agent-reach-unleashed"
     _seed_our_copy(ours)
-    foreign = home / ".cursor" / "skills" / "agent-reach"
+    foreign = home / ".cursor" / "skills" / "agent-reach-unleashed"
     foreign.mkdir(parents=True)
     (foreign / "SKILL.md").write_text("---\nname: someone-else\n---\n")
-    native_old = home / ".codex" / "skills" / "agent-reach"
+    native_old = home / ".codex" / "skills" / "agent-reach-unleashed"
     _seed_our_copy(native_old)
     result = manage.place_skill()
     assert ours.is_dir() and not ours.is_symlink()
@@ -692,13 +693,13 @@ def test_skill_falls_back_to_a_copy_without_symlink_rights(env, monkeypatch):
 
     monkeypatch.setattr(type(home), "symlink_to", no_symlinks)
     result = manage.place_skill()
-    copy = home / ".claude" / "skills" / "agent-reach"
+    copy = home / ".claude" / "skills" / "agent-reach-unleashed"
     assert not copy.is_symlink() and (copy / "SKILL.md").is_file()
     for name in ("sessions.md", "maintenance.md", "capabilities.md"):
         assert (copy / "references" / name).read_text(encoding="utf-8") == (
             manage.skill_dir() / "references" / name).read_text(encoding="utf-8")
     assert result["copies"] == [str(copy)] and result["links"] == []
-    (copy / "SKILL.md").write_text("---\nname: agent-reach\n---\nstale\n")
+    (copy / "SKILL.md").write_text("---\nname: agent-reach-unleashed\n---\nstale\n")
     manage.place_skill()
     assert "stale" not in (copy / "SKILL.md").read_text(encoding="utf-8"), "update refreshes recorded copies"
     manage.uninstall()
@@ -711,16 +712,16 @@ def test_skill_link_for_an_unlisted_ai_and_uninstall_removes_everything(env):
     manage.place_skill()
     other = home / "my-ai" / "skills"
     manage.link_skill(str(other))
-    assert (other / "agent-reach").is_symlink()
+    assert (other / "agent-reach-unleashed").is_symlink()
     manage.place_skill()
-    stray = home / ".gemini" / "skills" / "agent-reach"
+    stray = home / ".gemini" / "skills" / "agent-reach-unleashed"
     stray.parent.mkdir(parents=True)
-    stray.symlink_to(home / ".agents" / "skills" / "agent-reach")
-    assert (other / "agent-reach").is_symlink(), "update keeps recorded links"
+    stray.symlink_to(home / ".agents" / "skills" / "agent-reach-unleashed")
+    assert (other / "agent-reach-unleashed").is_symlink(), "update keeps recorded links"
     manage.uninstall()
     assert stray.is_symlink(), "unrecorded shortcut is retained"
-    for p in (other / "agent-reach", home / ".claude" / "skills" / "agent-reach",
-              home / ".agents" / "skills" / "agent-reach"):
+    for p in (other / "agent-reach-unleashed", home / ".claude" / "skills" / "agent-reach-unleashed",
+              home / ".agents" / "skills" / "agent-reach-unleashed"):
         assert not p.exists() and not p.is_symlink()
 
 
@@ -864,3 +865,74 @@ def test_removing_a_channel_keeps_the_transcribers(env):
     for name in tools.transcriber_tools():
         assert name in state.load()["tools"]
         assert tools.tool_dir(name).exists()
+
+
+# --- skill language and description ---
+
+@pytest.mark.parametrize("env_vars, expected", [
+    ({}, "en"),
+    ({"LANG": "C.UTF-8"}, "en"),
+    ({"LANG": "en_AU.UTF-8"}, "en"),
+    ({"LANG": "zh_CN.UTF-8"}, "zh"),
+    ({"LC_ALL": "zh_TW.UTF-8", "LANG": "en_US.UTF-8"}, "zh"),
+    ({"AGENT_REACH_LANG": "en", "LANG": "zh_CN.UTF-8"}, "en"),
+])
+def test_skill_is_english_unless_the_system_says_chinese(monkeypatch, env_vars, expected):
+    for var in ("AGENT_REACH_LANG", "LC_ALL", "LC_MESSAGES", "LANG"):
+        monkeypatch.delenv(var, raising=False)
+    for var, value in env_vars.items():
+        monkeypatch.setenv(var, value)
+    assert manage._skill_lang() == expected
+
+
+@pytest.mark.parametrize("lang, video_words", [("en", "Watches YouTube videos"), ("zh", "YouTube 视频和 Instagram reel")])
+def test_skill_description_mentions_watching_videos_and_fits_the_limit(lang, video_words):
+    import yaml
+
+    description = yaml.safe_load(manage.render_skill(lang).split("---")[1])["description"]
+    assert video_words in description
+    assert len(description) <= 1024, "Claude truncates skill descriptions over 1024 characters"
+
+
+# --- retiring the old skill name ---
+
+def test_update_retires_the_skill_recorded_under_the_old_name(env):
+    home = home_dir()
+    (home / ".claude").mkdir()
+    old_real = home / ".agents" / "skills" / "agent-reach"
+    _seed_our_copy_named(old_real, "agent-reach")
+    old_link = home / ".claude" / "skills" / "agent-reach"
+    old_link.parent.mkdir(parents=True)
+    old_link.symlink_to(old_real, target_is_directory=True)
+    state.mutate(lambda d: d["skill"].update(links=[{"agent": "claude-code", "path": str(old_link), "kind": "link"}],
+                                              files={str(old_real): [str(old_real / "SKILL.md")]}))
+
+    result = manage.place_skill()
+
+    assert not old_link.is_symlink() and not old_real.exists()
+    assert sorted(result["removed_old_copies"]) == sorted([str(old_link), str(old_real)])
+    new_link = home / ".claude" / "skills" / "agent-reach-unleashed"
+    assert new_link.is_symlink() and (new_link / "SKILL.md").is_file()
+    assert all(Path(r["path"]).name == "agent-reach-unleashed" for r in state.load()["skill"]["links"])
+
+
+def test_old_name_folders_it_never_recorded_or_that_are_not_ours_are_left_alone(env):
+    home = home_dir()
+    (home / ".claude").mkdir()
+    unrecorded = home / ".codex" / "skills" / "agent-reach"
+    _seed_our_copy_named(unrecorded, "agent-reach")
+    foreign = home / ".claude" / "skills" / "agent-reach"
+    foreign.mkdir(parents=True)
+    (foreign / "SKILL.md").write_text("---\nname: someone-else\n---\n")
+    state.mutate(lambda d: d["skill"].update(links=[{"agent": "claude-code", "path": str(foreign), "kind": "copy"}]))
+
+    result = manage.place_skill()
+
+    assert unrecorded.exists() and foreign.exists()
+    assert result["removed_old_copies"] == []
+
+
+def _seed_our_copy_named(path, name):
+    path.mkdir(parents=True)
+    (path / "SKILL.md").write_text(f"---\nname: {name}\ndescription: old\n---\nold\n")
+    (path / "references").mkdir()

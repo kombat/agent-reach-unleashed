@@ -7,6 +7,12 @@ All notable changes to this project will be documented in this file.
 ---
 
 
+## [1.6.0.3] - 2026-10-30 (Agent Reach Unleashed)
+
+- The agent skill is now called `agent-reach-unleashed` (folder `~/.agents/skills/agent-reach-unleashed`), so AIs list it under this fork's name. `setup` and `update` remove the skill copies and links they recorded under the old name `agent-reach`; anything else named `agent-reach` is left alone. The command is still `agent-reach`.
+- The agent skill is placed in English unless the system language is Chinese. Before, it fell back to Chinese whenever no language variable was set, which is the usual case for AI agents.
+- The skill description, in both languages, now says it watches YouTube videos and Instagram reels (speech plus frames) and reads reels without a login, so agents choose it when asked to watch, transcribe or summarise a video. Both stay under the 1024-character description limit.
+
 ## [1.6.0.2] - 2026-10-30 (Agent Reach Unleashed)
 
 - `setup` and `update` install a local Whisper privately inside `~/.agent-reach`, so free transcription needs no extra step: faster-whisper (whisper-ctranslate2) on Windows, macOS and Linux, plus mlx-whisper on Apple Silicon Macs. A failed Whisper install is reported but never fails a channel, and removing a channel never removes Whisper.
