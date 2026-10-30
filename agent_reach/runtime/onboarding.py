@@ -1,5 +1,6 @@
 """Read-only session discovery and explicit connection choices. Never logs a user in."""
 import json
+import os
 import urllib.request
 from datetime import datetime
 from urllib.parse import urlsplit
@@ -7,6 +8,17 @@ from urllib.parse import urlsplit
 from agent_reach.utils.url import host_matches
 
 from .result import BAD_INPUT, ReachError
+
+
+def language() -> str:
+    """"zh" when a language variable says Chinese, otherwise "en"."""
+    for var in ("AGENT_REACH_LANG", "LC_ALL", "LC_MESSAGES", "LANG"):
+        v = os.environ.get(var, "").strip().lower()
+        if v.startswith("zh"):
+            return "zh"
+        if v.startswith("en"):
+            return "en"
+    return "en"
 
 # These describe public routes an agent can try, not authenticated Reach readiness.
 # A successful sample depends on the tool, network exit, content and platform response.
@@ -35,7 +47,7 @@ _CAPABILITY_LIMITS = {
     'reddit': ['read 仅承诺其返回的帖子和评论；不保证完整评论树，不提供发评论动作。'],
     'twitter': ['thread 仅覆盖实际返回的回复；不保证完整评论流，不提供发帖动作。'],
     'xiaohongshu': ['只报告实际读取的正文、已加载评论和回复，不承诺完整导出。'],
-    'instagram': ['search 搜索用户；没有任意帖子 read 或独立 comments 动作。'],
+    'instagram': ['read/transcribe/watch 不登录读单条帖子和 reel；search 搜索用户；没有独立 comments 动作。'],
     'facebook': ['当前仅声明 search/profile，不承诺独立帖文读取或评论导出。'],
     'linkedin': ['当前仅声明职位搜索和 JD 读取，不承诺联系人或动态抓取。'],
     'boss': ['当前仅声明职位搜索和 JD 读取；登录不保证平台始终允许访问。'],
@@ -47,14 +59,14 @@ _CAPABILITY_LIMITS = {
 _QUICK_ACCESS = {
     'xiaoyuzhou': ('🔑 转录需 Key', '—'),
     'github': ('✅ 找项目、读文档、看讨论、看评论', '—'),
-    'youtube': ('✅ 找视频、读简介、读字幕', '—'),
+    'youtube': ('✅ 找视频、读简介、读字幕、看画面', '—'),
     'bilibili': ('✅ 找视频、读简介', '❌ 读字幕'),
     'v2ex': ('✅ 读帖子、看回复', '—'),
     'web': ('✅ 搜资料、读网页', '—'),
     'reddit': ('✅ 搜帖子、读正文、看评论', '—'),
     'twitter': ('✅ 搜摘要、试读原文', '❌ 搜推文、看动态、看回复'),
     'xiaohongshu': ('✅ 搜摘要、找链接', '❌ 站内搜、读正文、看评论'),
-    'instagram': ('✅ 搜简介', '❌ 找用户、看主页、看帖子'),
+    'instagram': ('✅ 读帖子和 reel、转录、看画面', '❌ 找用户、看主页、看帖子'),
     'facebook': ('✅ 搜摘要', '❌ 站内搜、看主页'),
     'linkedin': ('✅ 找职位、读公开详情', '❌ 站内搜'),
     'boss': ('✅ 搜标题、找链接', '❌ 站内搜、读详情'),
@@ -67,6 +79,33 @@ _DISPLAY_NAMES = {
     'web': '网页', 'reddit': 'Reddit', 'twitter': 'X / Twitter', 'facebook': 'Facebook',
     'instagram': 'Instagram', 'xiaohongshu': '小红书', 'linkedin': 'LinkedIn',
     'boss': 'BOSS直聘', 'xueqiu': '雪球',
+}
+
+_QUICK_ACCESS_EN = {
+    'xiaoyuzhou': ('🔑 transcription needs a key', '-'),
+    'github': ('✅ find projects, read docs, discussions and comments', '-'),
+    'youtube': ('✅ find videos, read descriptions and subtitles, watch with frames', '-'),
+    'bilibili': ('✅ find videos, read descriptions', '❌ read subtitles'),
+    'v2ex': ('✅ read posts and replies', '-'),
+    'web': ('✅ search and read web pages', '-'),
+    'reddit': ('✅ search, read posts and comments', '-'),
+    'twitter': ('✅ search snippets, try reading posts', '❌ search tweets, timelines, replies'),
+    'xiaohongshu': ('✅ search snippets, find links', '❌ in-site search, notes, comments'),
+    'instagram': ('✅ read posts and reels, transcribe, watch with frames', '❌ find users, profiles, post lists'),
+    'facebook': ('✅ search snippets', '❌ in-site search, pages'),
+    'linkedin': ('✅ find jobs, read public details', '❌ in-site search'),
+    'boss': ('✅ search titles, find links', '❌ in-site search, job details'),
+    'xueqiu': ('✅ find stocks, check quotes', '❌ hot posts, hot stocks'),
+}
+
+_DISPLAY_NAMES_EN = {'xiaoyuzhou': 'Xiaoyuzhou', 'bilibili': 'Bilibili', 'web': 'Web',
+                     'xiaohongshu': 'Xiaohongshu', 'boss': 'BOSS Zhipin', 'xueqiu': 'Xueqiu'}
+
+_STATUS_LABELS_EN = {
+    'not_added': 'not added, add when needed', 'needs_setup': 'needs setup', 'unverified': 'added, not yet tested',
+    'ready': 'tested and working', 'search_ready': 'search tested',
+    'needs_login': 'needs a login', 'cooldown': 'paused for now',
+    'needs_user_action': 'waiting for you', 'broken': 'currently broken',
 }
 
 _STATUS_LABELS = {
@@ -89,6 +128,53 @@ def _local_greeting():
     if 18 <= hour < 22:
         return '晚上好，想搜点什么？'
     return '夜深了，想搜点什么？🌙'
+
+def _local_greeting_en():
+    hour = datetime.now().hour
+    if 5 <= hour < 12:
+        return 'Good morning! What would you like to look up? ☀️'
+    if 12 <= hour < 18:
+        return 'Good afternoon! What would you like to look up?'
+    if 18 <= hour < 22:
+        return 'Good evening! What would you like to look up?'
+    return 'Working late? What would you like to look up? 🌙'
+
+
+def _upgrade_lines_en(result):
+    """Only for users coming from 1.5: what was kept, what changed, what is left to do."""
+    migration = result.get('migration')
+    if not migration:
+        return []
+    lines = ['**This was an upgrade from the old version (1.5):**', '',
+             '- Your keys and settings were kept.',
+             '- RSS and Exa web search are no longer separate; searching and reading pages now use "Web".',
+             '- Platforms that need a login, like X and Xiaohongshu, now use Agent Reach\'s own browser; '
+             'the first time, it tries to reuse your Chrome login for that site.',
+             '- Command-line tools you installed yourself (such as twitter-cli or bili) were left as they are.']
+    suggested = [_DISPLAY_NAMES_EN.get(n, _DISPLAY_NAMES.get(n, n)) for n in migration.get('suggested_channels') or []]
+    if suggested:
+        lines.append('- You used ' + ', '.join(suggested) + ' before; just say "add X" to keep using it.')
+    old = result.get('old_copies') or {}
+    if old.get('removed'):
+        lines.append('- The old program was removed, so it will not clash with the new one.')
+    for item in old.get('failed') or []:
+        from .legacy import manual_command
+        lines.append(f"- The old program could not be removed; please run: `{manual_command(item)}`")
+    return lines + ['']
+
+
+def _transcriber_lines_en(result):
+    rows = result.get('transcribers') or []
+    if not rows:
+        return []
+    failed = [t for t in rows if not t.get('ok')]
+    if not failed:
+        return ['Local transcription is ready (' + ', '.join(t['tool'] for t in rows) + '); '
+                'its speech model (about 1.5 GB) downloads on the first transcription if it is not there yet.', '']
+    names = ', '.join(t['tool'] for t in failed)
+    return [f'Local transcription: {names} did not install; `agent-reach update` tries again. '
+            'Everything else works.', '']
+
 
 def _upgrade_lines(result):
     """Only for users coming from 1.5: what was kept, what changed, what is left to do."""
@@ -114,7 +200,56 @@ def _upgrade_lines(result):
 
 
 def installation_report(result):
-    """Render one short receipt; keep detailed evidence in the structured summary."""
+    """Render one short receipt in the user's language; detailed evidence stays in the structured summary."""
+    return _installation_report_en(result) if language() == 'en' else _installation_report_zh(result)
+
+
+def _cell(value):
+    return str(value).replace('|', r'\|').replace('\n', ' ')
+
+
+def _installation_report_en(result):
+    entries = result['capability_summary']['channels']
+    installs = {row['channel']: row for row in result['default_channels']}
+    installed = sum(bool(row['ok']) for row in installs.values())
+    completed = all(row['ok'] for row in installs.values())
+    lines = [
+        _local_greeting_en(), '',
+        f"**Agent Reach Unleashed {result['version']} {'is installed' if completed else 'needs one more step'}.** "
+        f'Default channels: {installed}/{len(installs)} ready.', '',
+        *_upgrade_lines_en(result),
+        *_transcriber_lines_en(result),
+        '✅ works without a login; ❌ log in first; 🔑 needs a key; - nothing extra needed.', '',
+        '| Platform | Without a login | After logging in |', '|---|---|---|',
+    ]
+    for entry in sorted(entries, key=lambda item: item['level'] != 'default'):
+        name = entry['channel']
+        label = _DISPLAY_NAMES_EN.get(name, _DISPLAY_NAMES.get(name, name))
+        item = installs.get(name)
+        if entry['level'] == 'default':
+            if item and not item['ok']:
+                label += ' (install failed: ' + item.get('error', {}).get('code', 'UNKNOWN') + ')'
+            elif not item:
+                label += ' (removed by you)'
+        elif entry['reach_status'] in {'needs_setup', 'needs_login', 'cooldown', 'needs_user_action', 'broken'}:
+            label += ' (' + _STATUS_LABELS_EN[entry['reach_status']] + ')'
+        public, login = _QUICK_ACCESS_EN.get(name, ('Try your own public search and reading first', '-'))
+        lines.append('| ' + ' | '.join(_cell(value) for value in (label, public, login)) + ' |')
+    verified = [entry for entry in entries if entry['verified_actions']]
+    if verified:
+        names = '; '.join(_DISPLAY_NAMES_EN.get(entry['channel'], _DISPLAY_NAMES.get(entry['channel'], entry['channel']))
+                          + ': ' + '/'.join(entry['verified_actions']) for entry in verified)
+        lines += ['', 'Tested and working: ' + names + '. The rest have not been tested live yet.']
+    else:
+        lines += ['', 'Nothing has been tested live yet.']
+    lines += ['Snippets, titles and links come from search engines first; comments are only what was read; '
+              'subtitles only when the video has them.', '',
+              '**Just say what you want to look up.** Existing logins are reused first; '
+              'a login window opens only when one is really needed.']
+    return '\n'.join(lines) + '\n'
+
+
+def _installation_report_zh(result):
     def cell(value):
         return str(value).replace('|', r'\|').replace('\n', ' ')
 

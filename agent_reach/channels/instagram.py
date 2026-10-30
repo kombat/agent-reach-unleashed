@@ -64,6 +64,7 @@ def _run_ytdlp(args: list, timeout: float) -> str:
 class InstagramChannel(OpenCLISiteChannel):
     name = "instagram"
     description = "Instagram 用户、主页和指定用户帖子"
+    description_en = "Instagram users, profiles and posts; posts and reels read, transcribed and watched without a login"
     site = "instagram"
     domains = ("instagram.com", "instagr.am")
     usage = "opencli instagram search/profile/user/explore -f yaml"

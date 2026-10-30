@@ -7,6 +7,12 @@ All notable changes to this project will be documented in this file.
 ---
 
 
+## [1.6.0.4] - 2026-10-30 (Agent Reach Unleashed)
+
+- The summary `setup` prints is in English unless the system language is Chinese, and says whether local transcription installed. The Chinese summary is unchanged apart from the Instagram and YouTube lines, which now describe reading, transcribing and watching. The skill, the summary, setup messages and channel descriptions all use one language rule.
+- `agent-reach channels` describes each channel in English unless the system language is Chinese.
+- `uninstall` also removes its empty `cache` and `browser-locks` folders, so nothing is left in `~/.agent-reach`.
+
 ## [1.6.0.3] - 2026-10-30 (Agent Reach Unleashed)
 
 - The agent skill is now called `agent-reach-unleashed` (folder `~/.agents/skills/agent-reach-unleashed`), so AIs list it under this fork's name. `setup` and `update` remove the skill copies and links they recorded under the old name `agent-reach`; anything else named `agent-reach` is left alone. The command is still `agent-reach`.

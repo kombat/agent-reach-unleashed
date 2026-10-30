@@ -233,6 +233,7 @@ def _parse_hot_posts(data: Any, limit: int) -> list:
 class XueqiuChannel(Channel):
     name = "xueqiu"
     description = "雪球股票行情与社区动态"
+    description_en = "Xueqiu stock quotes and community posts"
 
     level = "optional"
     login_url = "https://xueqiu.com/"

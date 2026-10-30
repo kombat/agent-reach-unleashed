@@ -25,6 +25,7 @@ from .base import Action, Channel, Param
 class BossChannel(Channel):
     name = "boss"
     description = "Boss直聘 职位搜索与 JD"
+    description_en = "BOSS Zhipin job search and descriptions"
     level = "optional"
     login_url = "https://www.zhipin.com/web/user/?ka=header-login"
     session = "boss-agent-cli"

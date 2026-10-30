@@ -12,6 +12,7 @@ from .base import Action, Param
 class LinkedInChannel(OpenCLISiteChannel):
     name = site = "linkedin"
     description = "LinkedIn 职位搜索与详情"
+    description_en = "LinkedIn job search and details"
     domains = ("linkedin.com",)
     login_hint = "linkedin.com"
     login_url = "https://www.linkedin.com/login"

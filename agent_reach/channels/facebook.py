@@ -8,6 +8,7 @@ from .base import Action, Param
 class FacebookChannel(OpenCLISiteChannel):
     name = "facebook"
     description = "Facebook 帖子、主页和群组"
+    description_en = "Facebook posts, pages and groups"
     site = "facebook"
     domains = ("facebook.com", "fb.com", "fb.watch")
     usage = "opencli facebook search/profile/feed/groups -f yaml"

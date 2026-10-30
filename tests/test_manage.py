@@ -543,6 +543,7 @@ class Broken(_Base):
 
 
 def test_setup_adds_default_channels_and_survives_a_failing_install(env, monkeypatch):
+    monkeypatch.setenv("AGENT_REACH_LANG", "zh")
     env["chans"].append(Broken())
 
     def failing_install(tool, *, global_=False):
@@ -576,6 +577,7 @@ def test_setup_adds_default_channels_and_survives_a_failing_install(env, monkeyp
 def test_setup_text_displays_compact_capability_table_and_keeps_json_mode(env, capsys, monkeypatch):
     from agent_reach.runtime import cli, onboarding
 
+    monkeypatch.setenv("AGENT_REACH_LANG", "zh")
     monkeypatch.setattr(onboarding, '_local_greeting', lambda: '早上好呀，想搜点什么？☀️')
 
     assert cli.main(['setup', '--text']) == 0
@@ -591,7 +593,8 @@ def test_setup_text_displays_compact_capability_table_and_keeps_json_mode(env, c
     assert payload['result']['installation_report']['markdown'] == text.split('\n完整报告已保存：')[0]
 
 
-def test_setup_receipt_never_overwrites_a_linked_foreign_file(env, tmp_path):
+def test_setup_receipt_never_overwrites_a_linked_foreign_file(env, tmp_path, monkeypatch):
+    monkeypatch.setenv("AGENT_REACH_LANG", "zh")
     manage.setup()
     report = state.root() / 'installation-report.md'
     report.unlink()
@@ -882,7 +885,9 @@ def test_skill_is_english_unless_the_system_says_chinese(monkeypatch, env_vars, 
         monkeypatch.delenv(var, raising=False)
     for var, value in env_vars.items():
         monkeypatch.setenv(var, value)
-    assert manage._skill_lang() == expected
+    from agent_reach.runtime.onboarding import language
+
+    assert language() == expected
 
 
 @pytest.mark.parametrize("lang, video_words", [("en", "Watches YouTube videos"), ("zh", "YouTube 视频和 Instagram reel")])
@@ -936,3 +941,71 @@ def _seed_our_copy_named(path, name):
     path.mkdir(parents=True)
     (path / "SKILL.md").write_text(f"---\nname: {name}\ndescription: old\n---\nold\n")
     (path / "references").mkdir()
+
+
+# --- English setup summary ---
+
+def _english(monkeypatch):
+    for var in ("AGENT_REACH_LANG", "LC_ALL", "LC_MESSAGES", "LANG"):
+        monkeypatch.delenv(var, raising=False)
+
+
+def test_setup_summary_is_english_by_default_and_mentions_local_whisper(env, monkeypatch):
+    _english(monkeypatch)
+    env["chans"].append(Broken())
+
+    def failing_install(tool, *, global_=False):
+        raise ReachError("UPSTREAM_BROKEN", "install failed: no network")
+
+    monkeypatch.setattr(tools, "_install", failing_install)
+    md = manage.setup()["installation_report"]["markdown"]
+
+    assert "Agent Reach Unleashed" in md and "needs one more step" in md
+    assert "| Platform | Without a login | After logging in |" in md
+    assert "install failed: UPSTREAM_BROKEN" in md
+    assert "did not install; `agent-reach update` tries again" in md
+    assert not any("\u4e00" <= ch <= "\u9fff" for ch in md), "no Chinese in the English summary"
+
+
+def test_setup_summary_says_local_whisper_is_ready(env, monkeypatch):
+    _english(monkeypatch)
+
+    md = manage.setup()["installation_report"]["markdown"]
+
+    assert "Local transcription is ready (" + ", ".join(tools.transcriber_tools()) + ")" in md
+
+
+def test_setup_text_mode_footer_follows_the_language(env, capsys, monkeypatch):
+    from agent_reach.runtime import cli
+
+    _english(monkeypatch)
+    assert cli.main(["setup", "--text"]) == 0
+    assert "Full report saved: " in capsys.readouterr().out
+
+
+def test_channels_are_described_in_english_by_default(capsys, monkeypatch):
+    from agent_reach.runtime import cli
+
+    _english(monkeypatch)
+    cli.main(["channels"])
+    channels = json.loads(capsys.readouterr().out)["channels"]
+    assert channels and all(not any("\u4e00" <= ch <= "\u9fff" for ch in c["description"]) for c in channels)
+
+
+def test_channels_keep_their_chinese_descriptions_on_a_chinese_system(capsys, monkeypatch):
+    from agent_reach.runtime import cli
+
+    monkeypatch.setenv("AGENT_REACH_LANG", "zh")
+    cli.main(["channels"])
+    channels = {c["name"]: c["description"] for c in json.loads(capsys.readouterr().out)["channels"]}
+    assert channels["youtube"] == "YouTube 视频和字幕"
+
+
+def test_uninstall_leaves_no_empty_agent_reach_folders(env):
+    manage.setup()
+    for name in ("cache", "browser-locks"):
+        (state.root() / name).mkdir(exist_ok=True)
+
+    manage.uninstall()
+
+    assert not state.root().exists()

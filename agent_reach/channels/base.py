@@ -54,6 +54,7 @@ class Channel(ABC):
 
     name: str = ""                    # e.g. "youtube"
     description: str = ""             # e.g. "YouTube 视频和字幕"
+    description_en: str = ""          # e.g. "YouTube videos and subtitles"
 
     #: "default" / "optional" / "experimental".
     level: str = ""

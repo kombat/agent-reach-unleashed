@@ -418,20 +418,12 @@ def skill_dir() -> Path:
     return home_dir() / ".agents" / "skills" / SKILL_NAME
 
 
-def _skill_lang() -> str:
-    for var in ("AGENT_REACH_LANG", "LC_ALL", "LC_MESSAGES", "LANG"):
-        v = os.environ.get(var, "").strip().lower()
-        if v.startswith("zh"):
-            return "zh"
-        if v.startswith("en"):
-            return "en"
-    return "en"
-
-
 def render_skill(lang: Optional[str] = None) -> str:
     from importlib.resources import files
 
-    lang = lang or _skill_lang()
+    from .onboarding import language
+
+    lang = lang or language()
     template = files("agent_reach").joinpath("skill").joinpath("SKILL_en.md" if lang == "en" else "SKILL.md").read_text("utf-8")
     labels = {"default": "default", "optional": "optional", "experimental": "experimental"}
     rows = ["| channel | level | actions | login |", "|---|---|---|---|"]
@@ -752,7 +744,10 @@ def setup() -> dict:
         report["path"] = str(atomic_write_private_text(state.root() / "installation-report.md", markdown))
     except (OSError, PrivatePathError):
         # The receipt remains in stdout even if its local copy cannot be saved.
-        report["write_error"] = "安装报告未能保存；完整表格仍在 installation_report.markdown。"
+        from .onboarding import language
+
+        report["write_error"] = ("The installation report could not be saved; the full table is still in installation_report.markdown."
+                                 if language() == "en" else "安装报告未能保存；完整表格仍在 installation_report.markdown。")
     result["installation_report"] = report
     if migration:
         state.mutate(lambda saved: saved.__setitem__("migration_reported", True))
@@ -955,6 +950,11 @@ def update(check_only: bool = False) -> dict:
 # ── uninstall ──
 
 
+def _own_folders(root: Path) -> List[Path]:
+    """Folders Agent Reach creates and removes once they are empty."""
+    return [root / "tools", root / "cache", root / "browser-locks"]
+
+
 def uninstall(dry_run: bool = False) -> dict:
     from . import browser
 
@@ -986,12 +986,12 @@ def uninstall(dry_run: bool = False) -> dict:
                     directory.rmdir()
                 except OSError:
                     pass
-        for d in (root / "tools", root):
+        for d in (*_own_folders(root), root):
             try:
                 d.rmdir()
             except OSError:
                 pass
-    removing = {str(t) for t in targets} | {str(root / "tools")}
+    removing = {str(t) for t in targets} | {str(d) for d in _own_folders(root)}
     kept = sorted(str(p) for p in root.iterdir() if str(p) not in removing) if root.exists() else []
     return {"dry_run": dry_run, "removed": [str(t) for t in targets], "global_tools_removed": globals_,
             "kept_unrecognized": kept, "remove_program": UNINSTALL_PROGRAM}

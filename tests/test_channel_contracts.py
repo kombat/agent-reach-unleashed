@@ -14,6 +14,7 @@ def test_channel_registry_contract():
     for ch in channels:
         assert isinstance(ch.name, str) and ch.name
         assert isinstance(ch.description, str) and ch.description
+        assert isinstance(ch.description_en, str) and ch.description_en, f"{ch.name} needs an English description"
         assert ch.level in {"default", "optional", "experimental"}
         assert ch.actions, f"{ch.name} exposes no actions"
         for action in ch.actions:

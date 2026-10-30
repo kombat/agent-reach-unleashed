@@ -107,6 +107,7 @@ def _repo_item(repo: dict, readme: str | None = None) -> dict:
 class GitHubChannel(Channel):
     name = "github"
     description = "GitHub 仓库和代码"
+    description_en = "GitHub repositories, code, issues and pull requests"
 
     level = "default"
     actions = (

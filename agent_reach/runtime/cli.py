@@ -181,12 +181,15 @@ def _cmd_read(args: Sequence[str]) -> int:
 
 
 def _cmd_channels(_args: Sequence[str]) -> int:
+    from .onboarding import language
+
+    english = language() == "en"
     channels = []
     for ch in unified_channels():
         channels.append(
             {
                 "name": ch.name,
-                "description": ch.description,
+                "description": ch.description_en if english and ch.description_en else ch.description,
                 "level": ch.level,
                 "login": _login_info(ch),
                 "actions": [
@@ -314,15 +317,20 @@ def _cmd_management(head: str, args: Sequence[str]) -> int:
         return _bad_input(None, head, str(exc))
     if head == "setup":
         if ns.text:
+            from .onboarding import language
+
+            english = language() == "en"
             try:
                 result = manage.setup()
             except ReachError as err:
-                sys.stdout.write(f"安装未完成：{err.code} {err.message}\n{err.hint or ''}\n")
+                title = "Setup not finished: " if english else "安装未完成："
+                sys.stdout.write(f"{title}{err.code} {err.message}\n{err.hint or ''}\n")
                 return 1
             sys.stdout.write(result['installation_report']['markdown'])
             report = result['installation_report']
             if report.get('path'):
-                sys.stdout.write(f"\n完整报告已保存：{report['path']}\n")
+                saved = "Full report saved: " if english else "完整报告已保存："
+                sys.stdout.write(f"\n{saved}{report['path']}\n")
             if report.get('write_error'):
                 sys.stdout.write(f"\n{report['write_error']}\n")
             return 0 if all(row['ok'] for row in result['default_channels']) else 1
