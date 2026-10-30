@@ -32,6 +32,8 @@ This works the same on Windows, macOS and Linux. `setup` also installs free loca
 
 As a guide, transcribing a 1 min 40 s reel (including fetching it) took 13 seconds with mlx-whisper and 39 seconds with faster-whisper on the processor of an M4 Mac. Older or Windows laptops without an NVIDIA card will be slower. If a Whisper install fails, setup says so and every channel still works; `agent-reach update` tries again. If a Groq or OpenAI key is configured, it is used first, exactly as in Agent Reach. `agent-reach uninstall` removes the Whisper engines and the model. All are open source under MIT, BSD or Apache-2.0 licences.
 
+**Windows: untested on a real PC.** Everything here has only been run on a Mac. On Windows, the full test suite and the install and upgrade checks pass in CI, but those simulate the Whisper downloads, so nobody has yet installed and transcribed on an actual Windows PC. If you try it there, please [open an issue](https://github.com/kombat/agent-reach-unleashed/issues) with what happened, or send a fix; contributions are very welcome.
+
 ## Use
 
 ```bash
